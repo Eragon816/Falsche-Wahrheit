@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Falsche Wahrheit - Gewinner!</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <!-- Lokale Skripte -->
+    <script src="js/firebase-init.js"></script>
+    <script src="js/firebase-helpers.js"></script>
+    <script src="js/winner.js"></script>
+  </head>
+  <body>
+    <div id="app-container">
+      <div class="screen">
+        <div class="card">
+          <h2>Spielende!</h2>
+          <p>Der letzte überlebende Lügner und somit der Gewinner ist:</p>
+          <h1 id="winner-name" class="winner-animation"></h1>
+          <button id="play-again-btn" class="btn">Neues Spiel erstellen</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

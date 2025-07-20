@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Falsche Wahrheit - Start</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <!-- Lokale Skripte -->
+    <script src="js/firebase-init.js"></script>
+    <script src="js/firebase-helpers.js"></script>
+  </head>
+  <body>
+    <div id="app-container">
+      <div class="screen">
+        <div class="card">
+          <h1>Falsche Wahrheit</h1>
+
+          <!-- Option 1: Spiel hosten -->
+          <div class="start-option">
+            <h2>Neues Spiel starten</h2>
+            <p>Erstelle einen neuen Spielraum und lade deine Freunde ein.</p>
+            <button id="host-game-btn" class="btn">Spiel hosten</button>
+          </div>
+
+          <div style="height: 2px; background: #555; margin: 40px 0"></div>
+
+          <!-- Option 2: Spiel beitreten -->
+          <div class="start-option">
+            <h2>Einem Spiel beitreten</h2>
+            <p>Gib den Raumcode ein, den du von einem Freund erhalten hast.</p>
+            <input
+              type="text"
+              id="room-code-input"
+              placeholder="Raumcode eingeben"
+              maxlength="4"
+              style="text-transform: uppercase"
+            />
+            <button id="join-room-btn" class="btn secondary">Beitreten</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const hostGameBtn = document.getElementById("host-game-btn");
+        const joinRoomBtn = document.getElementById("join-room-btn");
+        const roomCodeInput = document.getElementById("room-code-input");
+
+        // --- Logik für das Hosten ---
+        hostGameBtn.addEventListener("click", () => {
+          const roomCode = generateRoomCode();
+          window.location.href = `lobby.html?room=${roomCode}`;
+        });
+
+        // --- Logik für das Beitreten ---
+        function joinRoom() {
+          const roomCode = roomCodeInput.value.trim().toUpperCase();
+          if (roomCode.length !== 4) {
+            alert("Bitte gib einen gültigen, 4-stelligen Raumcode ein.");
+            return;
+          }
+
+          // Überprüfen, ob der Raum existiert, bevor wir weiterleiten
+          const gameRef = getGameRef(roomCode);
+          gameRef
+            .get()
+            .then((snapshot) => {
+              if (snapshot.exists()) {
+                // Der Raum existiert, also leiten wir zum Lobby weiter
+                window.location.href = `lobby.html?room=${roomCode}`;
+              } else {
+                // Der Raum existiert nicht
+                alert(`Fehler: Der Raum "${roomCode}" wurde nicht gefunden.`);
+                roomCodeInput.value = "";
+              }
+            })
+            .catch((error) => {
+              console.error("Fehler bei der Überprüfung des Raums:", error);
+              alert(
+                "Es gab einen Fehler bei der Verbindung zur Datenbank. Bitte versuche es erneut."
+              );
+            });
+        }
+
+        joinRoomBtn.addEventListener("click", joinRoom);
+        roomCodeInput.addEventListener("keyup", (e) => {
+          if (e.key === "Enter") {
+            joinRoom();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

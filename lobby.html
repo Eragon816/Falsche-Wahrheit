@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Falsche Wahrheit - Lobby</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <!-- Lokale Skripte -->
+    <script src="js/firebase-init.js"></script>
+    <script src="js/firebase-helpers.js"></script>
+    <script src="js/lobby.js"></script>
+  </head>
+  <body>
+    <div id="app-container">
+      <div class="screen">
+        <div class="card">
+          <h2 id="lobby-title">Lobby</h2>
+          <p>
+            Teile den Raumcode (in der URL) oder den Link mit deinen Freunden!
+            Mindestens 4 Spieler benötigt.
+          </p>
+
+          <div id="join-form" style="margin-bottom: 20px">
+            <input
+              type="text"
+              id="player-name-input"
+              placeholder="Dein Name"
+              maxlength="15"
+            />
+            <button id="join-btn" class="btn secondary">Beitreten</button>
+          </div>
+
+          <div id="lobby-player-list"></div>
+          <button id="start-game-btn" class="btn" disabled>
+            Spiel starten
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
