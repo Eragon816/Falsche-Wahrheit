@@ -64,16 +64,13 @@
             return;
           }
 
-          // Überprüfen, ob der Raum existiert, bevor wir weiterleiten
           const gameRef = getGameRef(roomCode);
           gameRef
             .get()
             .then((snapshot) => {
               if (snapshot.exists()) {
-                // Der Raum existiert, also leiten wir zum Lobby weiter
                 window.location.href = `lobby.html?room=${roomCode}`;
               } else {
-                // Der Raum existiert nicht
                 alert(`Fehler: Der Raum "${roomCode}" wurde nicht gefunden.`);
                 roomCodeInput.value = "";
               }
