@@ -1,3 +1,7 @@
+/* =============================================== */
+/* ===== GRUNDLAGEN & VARIABLEN ===== */
+/* =============================================== */
+
 :root {
   --primary-color: #ff3c6a;
   --secondary-color: #3c91ff;
@@ -8,6 +12,7 @@
   --font-body: "Roboto", sans-serif;
 }
 
+/* Import der Google Fonts */
 @import url("https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap");
 
 * {
@@ -27,6 +32,10 @@ body {
   padding: 20px;
 }
 
+/* =============================================== */
+/* ===== ALLGEMEINE LAYOUT-ELEMENTE ===== */
+/* =============================================== */
+
 #app-container {
   width: 100%;
   max-width: 1200px;
@@ -37,6 +46,9 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   position: relative;
+  display: flex; /* Hilft bei der Zentrierung des Inhalts */
+  justify-content: center;
+  align-items: center;
 }
 
 .screen {
@@ -57,6 +69,10 @@ body {
   box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
 }
 
+/* =============================================== */
+/* ===== TYPOGRAFIE & INHALTSELEMENTE ===== */
+/* =============================================== */
+
 h1,
 h2,
 h3,
@@ -74,11 +90,18 @@ h2 {
   font-size: 3rem;
   margin-bottom: 15px;
 }
+h3 {
+  font-size: 2.5rem;
+}
+h4 {
+  font-size: 1.8rem;
+}
 
 p {
   font-size: 1.1rem;
   margin-bottom: 20px;
   max-width: 600px;
+  line-height: 1.5;
 }
 
 input[type="text"],
@@ -125,13 +148,33 @@ textarea {
 
 .btn.secondary {
   background-color: var(--secondary-color);
-  margin-right: 10px;
 }
 .btn.secondary:hover:not(:disabled) {
   background-color: #5ca1ff;
 }
 
-/* Lobby */
+/* =============================================== */
+/* ===== SEITENSPEZIFISCHE STYLES ===== */
+/* =============================================== */
+
+/* --- Startseite (index.html) --- */
+.start-option {
+  margin-bottom: 20px;
+}
+.start-option h2 {
+  color: var(--secondary-color);
+  margin-bottom: 10px;
+}
+#room-code-input {
+  text-align: center;
+  font-family: var(--font-header);
+  font-size: 2rem;
+  letter-spacing: 5px;
+  max-width: 300px;
+  margin: 0 auto 20px auto;
+}
+
+/* --- Lobby (lobby.html) --- */
 #lobby-player-list {
   display: flex;
   flex-wrap: wrap;
@@ -140,7 +183,6 @@ textarea {
   margin-bottom: 20px;
   min-height: 50px;
 }
-
 .lobby-player {
   background-color: var(--secondary-color);
   padding: 10px 20px;
@@ -148,17 +190,20 @@ textarea {
   font-weight: bold;
 }
 
-/* Game Screen Layout */
+/* --- Spiel (game.html) --- */
 #game-screen {
   display: grid;
+  grid-template-columns: 250px 1fr;
+  grid-template-rows: auto 1fr;
   grid-template-areas:
     "header header"
     "sidebar main";
-  grid-template-columns: 250px 1fr;
-  grid-template-rows: auto 1fr;
   gap: 20px;
   align-items: flex-start;
   justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
 }
 #game-header {
   grid-area: header;
@@ -201,7 +246,7 @@ textarea {
   opacity: 0.5;
 }
 
-/* In-Game Content Styling */
+/* In-Game Elemente */
 .question-card {
   font-size: 1.8rem;
   margin-bottom: 20px;
@@ -215,12 +260,14 @@ textarea {
   padding: 15px;
   border-radius: 10px;
   margin-bottom: 20px;
+  max-width: 80%;
 }
 .question-selection-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
   width: 100%;
+  max-width: 700px;
 }
 .question-btn {
   padding: 20px;
@@ -246,7 +293,7 @@ textarea {
   background-color: #ff3c3c;
 }
 
-/* Animation */
+/* --- Gewinner (winner.html) --- */
 .winner-animation {
   animation: bounce-in 1s ease;
 }
@@ -263,21 +310,91 @@ textarea {
     transform: scale(1);
   }
 }
-/* Ergänzungen für index.html */
-.start-option {
-  margin-bottom: 20px;
-}
 
-.start-option h2 {
-  color: var(--secondary-color);
-  margin-bottom: 10px;
-}
+/* =============================================== */
+/* ===== RESPONSIVE STYLES FÜR KLEINE BILDSCHIRME ===== */
+/* =============================================== */
+@media (max-width: 768px) {
+  /* --- Grundlegende Anpassungen --- */
+  body {
+    padding: 0;
+    min-height: 100vh;
+  }
 
-#room-code-input {
-  text-align: center;
-  font-family: var(--font-header);
-  font-size: 2rem;
-  letter-spacing: 5px;
-  max-width: 300px;
-  margin: 0 auto 20px auto;
+  #app-container {
+    height: 100%; /* Nimmt die volle Bildschirmhöhe ein */
+    min-height: 100vh; /* Stellt sicher, dass es immer voll ist */
+    max-height: none;
+    border-radius: 0;
+    overflow-y: auto; /* WICHTIG: Fügt eine Scrollbar hinzu */
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  /* Schriftgrößen verkleinern */
+  h1 {
+    font-size: 2.8rem;
+  }
+  h2 {
+    font-size: 2.2rem;
+  }
+  p {
+    font-size: 1rem;
+  }
+  .btn {
+    font-size: 1.2rem;
+    padding: 12px 24px;
+  }
+  input[type="text"],
+  textarea {
+    font-size: 1rem;
+  }
+
+  /* --- Spezifische Layout-Anpassungen --- */
+
+  /* Spiel-Layout auf eine Spalte umstellen */
+  #game-screen {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "header"
+      "main"
+      "sidebar";
+    padding: 10px;
+    gap: 15px;
+  }
+
+  #player-sidebar {
+    height: auto;
+    padding: 10px;
+    border-top: 2px solid var(--primary-color);
+  }
+
+  #player-sidebar h4 {
+    margin-bottom: 10px;
+  }
+
+  /* Spieler in der Liste nebeneinander fließen lassen */
+  #game-player-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #game-player-list .player-item {
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 5px 10px;
+    margin-bottom: 0;
+  }
+
+  /* Fragen-Auswahl untereinander anordnen */
+  .question-selection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Startseite lesbarer machen */
+  .start-option h2 {
+    font-size: 1.8rem;
+  }
 }
