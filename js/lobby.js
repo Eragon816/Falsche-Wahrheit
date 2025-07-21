@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const playerNameInput = document.getElementById("player-name-input");
   const joinBtn = document.getElementById("join-btn");
 
-  // === Lokale Spieler-Identität ===
   const LOCAL_PLAYER_KEY = "falscheWahrheitPlayer";
   function setLocalPlayerIdentity(player) {
     sessionStorage.setItem(LOCAL_PLAYER_KEY, JSON.stringify(player));
@@ -15,10 +14,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const playerJSON = sessionStorage.getItem(LOCAL_PLAYER_KEY);
     return playerJSON ? JSON.parse(playerJSON) : null;
   }
-  // =============================================================
 
   const roomCode = getRoomCodeFromURL();
   if (!roomCode) {
+    alert("Error: No room code found. Redirecting to start page.");
     window.location.href = "index.html";
     return;
   }
@@ -32,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const gameStateFromFirebase = snapshot.val();
 
     if (!gameStateFromFirebase) {
-      console.log(`Raum ${roomCode} wird initialisiert.`);
+      console.log(`Room ${roomCode} does not exist. Initializing...`);
       const initialState = {
         roomCode: roomCode,
         players: [],
@@ -44,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     localGameState = gameStateFromFirebase;
-    console.log("Spielzustand empfangen:", localGameState);
+    console.log("Game state received:", localGameState);
 
     if (localGameState.currentPhase !== "LOBBY") {
       window.location.href = `game.html?room=${roomCode}`;
@@ -55,57 +54,50 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function updateLobbyView(state) {
-    // Diese Funktion kümmert sich jetzt NUR um die Anzeige der Spieler
-    // und die Logik für den Start-Button. Das Ausblenden des Formulars wird separat gehandhabt.
+    const localPlayer = getLocalPlayerIdentity();
+    if (
+      localPlayer &&
+      localPlayer.roomCode === roomCode &&
+      state.players.some((p) => p.id === localPlayer.playerId)
+    ) {
+      joinForm.innerHTML = `<p>You have joined as <strong>${localPlayer.playerName}</strong>. Waiting for the game to start...</p>`;
+      joinForm.style.marginBottom = "20px";
+    }
+
     lobbyPlayerList.innerHTML = "";
+    const amITheHost = localPlayer && localPlayer.playerId === state.hostId;
+
     if (state.players) {
       state.players.forEach((player) => {
         const playerEl = document.createElement("div");
         playerEl.className = "lobby-player";
-        let playerText = player.name;
+
+        let playerText = `<span>${player.name}</span>`; // Name in ein span wickeln
         if (player.id === state.hostId) {
-          playerText += " 👑";
+          playerText += ' <span class="host-crown">👑</span>';
         }
-        playerEl.textContent = playerText;
+
+        // NEU: Kick-Button hinzufügen, wenn ich der Host bin und es nicht ich selbst bin
+        if (amITheHost && player.id !== localPlayer.playerId) {
+          playerText += `<button class="kick-btn" data-kick-id="${player.id}">×</button>`;
+        }
+
+        playerEl.innerHTML = playerText;
         lobbyPlayerList.appendChild(playerEl);
       });
     }
 
-    // Aktualisiere die UI basierend darauf, ob der aktuelle Browser-Client schon beigetreten ist
-    checkIfPlayerHasJoined(state);
-  }
+    // Event-Listener für alle neuen Kick-Buttons hinzufügen
+    addKickListeners();
 
-  // NEUE, dedizierte Funktion, um die UI für den Beitritt zu steuern
-  function checkIfPlayerHasJoined(state) {
-    const localPlayer = getLocalPlayerIdentity();
-
-    // Ist der Spieler im sessionStorage für diesen Raum registriert UND in der DB vorhanden?
-    const hasJoined =
-      localPlayer &&
-      localPlayer.roomCode === roomCode &&
-      state.players.some((p) => p.id === localPlayer.playerId);
-
-    if (hasJoined) {
-      // Spieler ist beigetreten: Formular ausblenden
-      joinForm.innerHTML = `<p>Du bist als <strong>${localPlayer.playerName}</strong> beigetreten. Warten auf Spielstart...</p>`;
-      joinForm.style.marginBottom = "20px";
-
-      // Start-Button-Logik: Nur für den Host anzeigen
-      const amITheHost = localPlayer.playerId === state.hostId;
-      const enoughPlayers = state.players && state.players.length >= 4;
-
-      if (amITheHost) {
-        startGameBtn.style.display = "block";
-        startGameBtn.disabled = !enoughPlayers;
-        startGameBtn.title = enoughPlayers
-          ? ""
-          : "Es werden mindestens 4 Spieler benötigt.";
-      } else {
-        startGameBtn.style.display = "none";
-      }
+    const enoughPlayers = state.players && state.players.length >= 4;
+    if (amITheHost) {
+      startGameBtn.style.display = "block";
+      startGameBtn.disabled = !enoughPlayers;
+      startGameBtn.title = enoughPlayers
+        ? ""
+        : "At least 4 players are required.";
     } else {
-      // Spieler ist noch nicht beigetreten: Formular anzeigen, Button verstecken
-      joinForm.style.display = "block";
       startGameBtn.style.display = "none";
     }
   }
@@ -113,67 +105,95 @@ document.addEventListener("DOMContentLoaded", () => {
   function joinLobby() {
     const name = playerNameInput.value.trim();
     if (!name) {
-      alert("Bitte gib einen Namen ein.");
+      alert("Please enter a name.");
       return;
     }
-
     if (!localGameState) {
-      alert("Verbindung wird hergestellt, bitte versuche es erneut.");
+      alert("Connecting to the server, please try again in a moment.");
       return;
     }
-
     if (
       localGameState.players &&
       localGameState.players.some(
         (p) => p.name.toLowerCase() === name.toLowerCase()
       )
     ) {
-      alert(`Der Name "${name}" ist bereits vergeben.`);
+      alert(`The name "${name}" is already taken. Please choose another one.`);
       return;
     }
-
     const newPlayer = {
       id: Date.now(),
       name: name,
       isJudge: false,
       isEliminated: false,
     };
-
     if (!localGameState.players) localGameState.players = [];
     localGameState.players.push(newPlayer);
-
     if (!localGameState.hostId) {
       localGameState.hostId = newPlayer.id;
     }
 
-    // Speichere die Identität des Spielers LOKAL, BEVOR wir an Firebase senden
     setLocalPlayerIdentity({
       playerId: newPlayer.id,
       playerName: newPlayer.name,
       roomCode: roomCode,
     });
-
-    // Sende den aktualisierten Zustand an Firebase
     saveGameState(roomCode, localGameState);
   }
 
+  // KORRIGIERTE startGame FUNKTION
   function startGame() {
     const localPlayer = getLocalPlayerIdentity();
-    if (!localPlayer || localPlayer.playerId !== localGameState.hostId) return;
+    if (!localPlayer || localPlayer.playerId !== localGameState.hostId) {
+      console.warn("Only the host can start the game!");
+      return;
+    }
 
     const judgeIndex = Math.floor(
       Math.random() * localGameState.players.length
     );
     localGameState.judgeId = localGameState.players[judgeIndex].id;
     localGameState.players[judgeIndex].isJudge = true;
+
     localGameState.currentRound = 1;
     localGameState.currentPhase = "QUESTION_SELECTION";
+
+    // Alle runden-spezifischen Daten initialisieren
+    localGameState.currentQuestion = "";
+    localGameState.answers = [];
+    localGameState.usedAnswers = [];
+    localGameState.currentDefenderId = null;
+    localGameState.currentAnswerToDefend = null;
+    localGameState.defendedPlayerIdsInRound = [];
+
     saveGameState(roomCode, localGameState);
   }
 
-  // Initialer Check beim Laden der Seite
-  if (localGameState) {
-    checkIfPlayerHasJoined(localGameState);
+  // NEUE FUNKTIONEN für das Kicken
+  function addKickListeners() {
+    document.querySelectorAll(".kick-btn").forEach((button) => {
+      button.onclick = (e) => {
+        const playerIdToKick = parseInt(e.target.dataset.kickId);
+        kickPlayer(playerIdToKick);
+      };
+    });
+  }
+
+  function kickPlayer(playerId) {
+    if (confirm(`Are you sure you want to kick this player?`)) {
+      localGameState.players = localGameState.players.filter(
+        (p) => p.id !== playerId
+      );
+      // Optional: Wenn der gekickte Spieler der Host war, einen neuen Host bestimmen
+      if (localGameState.hostId === playerId) {
+        if (localGameState.players.length > 0) {
+          localGameState.hostId = localGameState.players[0].id;
+        } else {
+          localGameState.hostId = null;
+        }
+      }
+      saveGameState(roomCode, localGameState);
+    }
   }
 
   joinBtn.addEventListener("click", joinLobby);

@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Falsche Wahrheit - Spiel</title>
+    <title>False Truth - Game</title>
     <link rel="stylesheet" href="style.css" />
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <!-- Lokale Skripte -->
     <script src="js/firebase-init.js"></script>
     <script src="js/firebase-helpers.js"></script>
     <script src="js/game.js"></script>
@@ -17,16 +15,15 @@
     <div id="app-container">
       <div id="game-screen" class="screen">
         <div id="game-header">
-          <h3 id="round-title">Runde 1</h3>
-          <div id="judge-info">Richter: <span id="judge-name">...</span></div>
+          <h3 id="round-title">Round 1</h3>
+          <div id="judge-info">Judge: <span id="judge-name">...</span></div>
         </div>
         <div id="player-sidebar">
-          <h4>Spieler</h4>
+          <h4>Players</h4>
           <div id="game-player-list"></div>
         </div>
         <div id="main-content">
-          <!-- Dieser Text wird durch game.js ersetzt -->
-          <p>Spiel wird geladen...</p>
+          <p>Loading game...</p>
         </div>
       </div>
     </div>

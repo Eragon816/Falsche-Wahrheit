@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Falsche Wahrheit - Lobby</title>
+    <title>False Truth - Lobby</title>
     <link rel="stylesheet" href="style.css" />
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <!-- Lokale Skripte -->
     <script src="js/firebase-init.js"></script>
     <script src="js/firebase-helpers.js"></script>
     <script src="js/lobby.js"></script>
@@ -19,20 +17,18 @@
         <div class="card">
           <h2 id="lobby-title">Lobby</h2>
           <p>
-            Teile den Raumcode (oben) oder den Link mit deinen Freunden!
-            Mindestens 4 Spieler benötigt.
+            Share the room code (at the top) or the link with your friends! A
+            minimum of 4 players is required.
           </p>
-
           <div id="join-form" style="margin-bottom: 20px">
             <input
               type="text"
               id="player-name-input"
-              placeholder="Dein Name"
+              placeholder="Your Name"
               maxlength="15"
             />
-            <button id="join-btn" class="btn secondary">Beitreten</button>
+            <button id="join-btn" class="btn secondary">Join</button>
           </div>
-
           <div id="lobby-player-list"></div>
           <button
             id="start-game-btn"
@@ -40,7 +36,7 @@
             disabled
             style="display: none"
           >
-            Spiel starten
+            Start Game
           </button>
         </div>
       </div>

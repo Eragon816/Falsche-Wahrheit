@@ -1,19 +1,26 @@
 /* =============================================== */
-/* ===== GRUNDLAGEN & VARIABLEN ===== */
+/* ===== NEON-FUTURISTIC UI - GRUNDLAGEN ===== */
 /* =============================================== */
-
 :root {
-  --primary-color: #ff3c6a;
-  --secondary-color: #3c91ff;
-  --background-color: #2c2f33;
-  --card-background: #3a3e42;
-  --text-color: #ffffff;
+  --primary-color: #6c6ae7;
+  --secondary-color: #f9a826;
+  --danger-color: #e74c3c;
+  --background-color-start: #161625;
+  --background-color-end: #1a1a2e;
+  --card-bg-color: rgba(22, 22, 37, 0.5); /* Dunkler für mehr Kontrast */
+  --text-color: #b3b3d4;
+  --text-color-bright: #ffffff;
+  --font-ui: "Poppins", sans-serif;
   --font-header: "Bangers", cursive;
-  --font-body: "Roboto", sans-serif;
+  --main-transition: 0.3s ease-in-out;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --neon-shadow-primary: 0 0 5px var(--primary-color),
+    0 0 10px var(--primary-color), 0 0 15px var(--primary-color);
+  --neon-shadow-secondary: 0 0 5px var(--secondary-color),
+    0 0 10px var(--secondary-color);
 }
 
-/* Import der Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bangers&family=Poppins:wght@400;600;700&display=swap");
 
 * {
   box-sizing: border-box;
@@ -21,34 +28,60 @@
   padding: 0;
 }
 
+html,
 body {
-  font-family: var(--font-body);
-  background-color: var(--background-color);
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--background-color-start);
   color: var(--text-color);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
 }
 
 /* =============================================== */
-/* ===== ALLGEMEINE LAYOUT-ELEMENTE ===== */
+/* ===== LAYOUT & HINTERGRUND ===== */
 /* =============================================== */
-
 #app-container {
   width: 100%;
-  max-width: 1200px;
-  height: 90vh;
-  max-height: 800px;
-  background-color: var(--card-background);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at bottom,
+    var(--background-color-start) 0%,
+    var(--background-color-end) 100%
+  );
   position: relative;
-  display: flex; /* Hilft bei der Zentrierung des Inhalts */
-  justify-content: center;
-  align-items: center;
+  z-index: 1;
+}
+
+/* Subtiler animierter Grid-Hintergrund */
+#app-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(
+      rgba(108, 106, 231, 0.1) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(108, 106, 231, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: pan-background 30s linear infinite;
+  z-index: -1;
+}
+@keyframes pan-background {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 40px 40px;
+  }
 }
 
 .screen {
@@ -58,343 +91,345 @@ body {
   align-items: center;
   width: 100%;
   height: 100%;
-  padding: 20px;
+  padding: 20px 15px;
   text-align: center;
+  overflow-y: auto;
 }
 
+/* =============================================== */
+/* ===== KREATIVE KOMPONENTEN (TextBoxes, Buttons) ===== */
+/* =============================================== */
 .card {
-  background-color: rgba(0, 0, 0, 0.2);
-  padding: 30px 40px;
-  border-radius: 15px;
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+  background: var(--card-bg-color);
+  border: 1px solid var(--primary-color);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 30px 25px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 10px var(--primary-color);
+  animation: fadeIn 0.5s var(--main-transition);
+  width: 100%;
+  max-width: 450px;
+  /* Dynamische Form */
+  clip-path: polygon(0 10%, 100% 0, 100% 90%, 0% 100%);
+  border-radius: 0; /* Clip-path ersetzt border-radius */
 }
-
-/* =============================================== */
-/* ===== TYPOGRAFIE & INHALTSELEMENTE ===== */
-/* =============================================== */
 
 h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-header);
-  letter-spacing: 2px;
-  color: var(--primary-color);
-}
-
-h1 {
-  font-size: 4rem;
-  margin-bottom: 20px;
-}
 h2 {
-  font-size: 3rem;
-  margin-bottom: 15px;
+  font-family: var(--font-header);
+  letter-spacing: 4px;
+  color: var(--text-color-bright);
+  text-shadow: var(--neon-shadow-primary);
+  font-size: clamp(2.8rem, 10vw, 4rem);
 }
-h3 {
-  font-size: 2.5rem;
-}
-h4 {
-  font-size: 1.8rem;
-}
-
 p {
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-  max-width: 600px;
-  line-height: 1.5;
+  line-height: 1.6;
+  margin-bottom: 25px;
+  font-size: 0.9rem;
 }
 
 input[type="text"],
 textarea {
-  width: 100%;
+  background: transparent;
+  border: 1px solid var(--primary-color);
   padding: 15px;
-  border-radius: 10px;
-  border: 2px solid var(--secondary-color);
-  background-color: #2c2f33;
-  color: var(--text-color);
-  font-size: 1.2rem;
-  margin-bottom: 20px;
-  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--text-color-bright);
+  transition: all var(--main-transition);
+  width: 100%;
+  margin-bottom: 15px;
+  clip-path: polygon(0 15%, 100% 0, 100% 85%, 0% 100%);
+  border-radius: 0;
 }
-
+input[type="text"]:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: var(--neon-shadow-primary);
+}
 textarea {
-  min-height: 100px;
+  text-align: right;
+  direction: rtl;
+  min-height: 120px;
   resize: vertical;
 }
 
 .btn {
-  padding: 15px 30px;
-  border: none;
-  border-radius: 10px;
-  background-color: var(--primary-color);
-  color: var(--text-color);
   font-family: var(--font-header);
-  font-size: 1.5rem;
-  letter-spacing: 1px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  font-size: 1.2rem;
+  padding: 12px 30px;
+  border: 1px solid var(--primary-color);
+  background: transparent;
+  color: var(--text-color-bright);
   cursor: pointer;
-  transition: transform 0.2s, background-color 0.2s;
+  transition: all var(--main-transition);
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 10px;
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  border-radius: 0;
 }
-
 .btn:hover:not(:disabled) {
-  transform: scale(1.05);
-  background-color: #ff5c8a;
+  background: var(--primary-color);
+  color: var(--text-color-bright);
+  text-shadow: 0 0 5px var(--text-color-bright);
+  box-shadow: var(--neon-shadow-primary);
+  transform: translateY(-2px);
 }
-
 .btn:disabled {
-  background-color: #555;
+  background: #333;
+  color: #777;
+  border-color: #555;
   cursor: not-allowed;
-  opacity: 0.6;
 }
-
 .btn.secondary {
-  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
 }
 .btn.secondary:hover:not(:disabled) {
-  background-color: #5ca1ff;
+  background: var(--secondary-color);
+  box-shadow: var(--neon-shadow-secondary);
 }
 
 /* =============================================== */
-/* ===== SEITENSPEZIFISCHE STYLES ===== */
+/* ===== SPIEL-LAYOUT (MOBILE-FIRST mit Flexbox) ===== */
 /* =============================================== */
-
-/* --- Startseite (index.html) --- */
-.start-option {
-  margin-bottom: 20px;
-}
-.start-option h2 {
-  color: var(--secondary-color);
-  margin-bottom: 10px;
-}
-#room-code-input {
-  text-align: center;
-  font-family: var(--font-header);
-  font-size: 2rem;
-  letter-spacing: 5px;
-  max-width: 300px;
-  margin: 0 auto 20px auto;
-}
-
-/* --- Lobby (lobby.html) --- */
-#lobby-player-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 20px;
-  min-height: 50px;
-}
-.lobby-player {
-  background-color: var(--secondary-color);
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-weight: bold;
-}
-
-/* --- Spiel (game.html) --- */
 #game-screen {
-  display: grid;
-  grid-template-columns: 250px 1fr;
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "header header"
-    "sidebar main";
-  gap: 20px;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 100%;
-  height: 100%;
-  padding: 20px;
-}
-#game-header {
-  grid-area: header;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  border-bottom: 2px solid var(--primary-color);
-  padding-bottom: 10px;
-}
-#player-sidebar {
-  grid-area: sidebar;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 20px;
-  border-radius: 10px;
-  height: 100%;
-}
-#main-content {
-  grid-area: main;
-  padding: 20px;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+}
+#game-header {
+  padding: 10px 15px;
+  flex-shrink: 0;
+}
+#player-sidebar {
+  order: -1;
+  flex-shrink: 0;
+  padding: 0 15px 10px 15px;
+}
+#player-sidebar h4 {
+  display: none;
+}
+#game-player-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+#game-player-list::-webkit-scrollbar {
+  display: none;
+}
+.player-item {
+  background: var(--card-bg-color);
+  border: 2px solid transparent;
+  padding: 6px 15px;
+  transition: all var(--main-transition);
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+}
+.player-item.judge {
+  border-color: var(--secondary-color);
+  box-shadow: inset 0 0 8px var(--secondary-color);
+}
+.player-item.defending {
+  border-color: var(--primary-color);
+  transform: scale(1.1);
+  box-shadow: var(--neon-shadow-primary);
+  z-index: 10;
+}
+.player-item.is-eliminating {
+  animation: playerEliminated 0.6s forwards ease-in-out;
+}
+@keyframes playerEliminated {
+  from {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+#main-content {
+  flex-grow: 1;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  padding: 0 15px 15px 15px;
 }
-
-#game-player-list .player-item {
-  padding: 10px;
-  margin-bottom: 5px;
-  border-radius: 5px;
-  transition: all 0.3s;
+#main-content .card {
+  max-height: 100%;
+  overflow-y: auto;
 }
-#game-player-list .player-item.judge {
-  font-weight: bold;
-  color: var(--primary-color);
-}
-#game-player-list .player-item.eliminated {
-  text-decoration: line-through;
-  opacity: 0.5;
-}
-
-/* In-Game Elemente */
-.question-card {
+#main-content .card h2 {
   font-size: 1.8rem;
-  margin-bottom: 20px;
-  background: var(--secondary-color);
+}
+.question-card,
+.answer-to-defend {
+  direction: rtl;
+  text-align: right;
+  background: var(--primary-color);
+  color: var(--text-color-bright);
   padding: 20px;
-  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  box-shadow: 0 0 15px var(--primary-color);
+  width: 100%;
+  margin-bottom: 20px;
+  clip-path: polygon(0 10%, 100% 0, 100% 90%, 0% 100%);
 }
 .answer-to-defend {
-  font-style: italic;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  max-width: 80%;
+  background: var(--secondary-color);
+  box-shadow: 0 0 15px var(--secondary-color);
 }
 .question-selection-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  grid-template-columns: 1fr;
+  gap: 10px;
   width: 100%;
-  max-width: 700px;
 }
 .question-btn {
-  padding: 20px;
-  background-color: var(--secondary-color);
+  direction: rtl;
+  text-align: right;
+  background: transparent;
+  border: 1px solid var(--secondary-color);
   color: var(--text-color);
-  border: none;
-  border-radius: 10px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-  height: 100%;
+  font-size: 1rem;
+  padding: 15px;
+  transition: all var(--main-transition);
+  width: 100%;
+  clip-path: polygon(0 15%, 100% 0, 100% 85%, 0% 100%);
 }
 .question-btn:hover {
-  transform: scale(1.02);
+  background: var(--secondary-color);
+  color: var(--background-color-start);
+  text-shadow: none;
+  box-shadow: var(--neon-shadow-secondary);
 }
 .judgement-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 8px;
   justify-content: center;
 }
+.judgement-grid .btn {
+  flex-grow: 1;
+  max-width: 140px;
+  font-size: 1rem;
+}
 .judgement-btn {
-  background-color: #ff3c3c;
+  border-color: var(--danger-color);
+}
+.judgement-btn:hover:not(:disabled) {
+  background: var(--danger-color);
+  box-shadow: 0 0 15px var(--danger-color);
 }
 
-/* --- Gewinner (winner.html) --- */
-.winner-animation {
-  animation: bounce-in 1s ease;
+/* --- Lobby spezifisch --- */
+#lobby-player-list {
+  gap: 12px;
 }
-@keyframes bounce-in {
-  0% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-  }
+.lobby-player {
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  border-color: var(--primary-color);
+  padding: 12px 25px;
+  max-width: 320px;
+}
+.kick-btn {
+  background: var(--danger-color);
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  line-height: 28px;
 }
 
 /* =============================================== */
-/* ===== RESPONSIVE STYLES FÜR KLEINE BILDSCHIRME ===== */
+/* ===== TABLET & DESKTOP (ab 768px) ===== */
 /* =============================================== */
-@media (max-width: 768px) {
-  /* --- Grundlegende Anpassungen --- */
-  body {
-    padding: 0;
-    min-height: 100vh;
-  }
-
+@media (min-width: 768px) {
   #app-container {
-    height: 100%; /* Nimmt die volle Bildschirmhöhe ein */
-    min-height: 100vh; /* Stellt sicher, dass es immer voll ist */
-    max-height: none;
-    border-radius: 0;
-    overflow-y: auto; /* WICHTIG: Fügt eine Scrollbar hinzu */
+    padding: 40px;
   }
-
-  .card {
-    padding: 20px;
+  .screen {
+    padding: 40px;
   }
-
-  /* Schriftgrößen verkleinern */
   h1 {
-    font-size: 2.8rem;
+    font-size: 4.5rem;
   }
   h2 {
-    font-size: 2.2rem;
+    font-size: 3.5rem;
   }
   p {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   .btn {
-    font-size: 1.2rem;
-    padding: 12px 24px;
+    font-size: 1.3rem;
   }
-  input[type="text"],
-  textarea {
-    font-size: 1rem;
+  .card {
+    padding: 40px;
+    max-width: 550px;
   }
 
-  /* --- Spezifische Layout-Anpassungen --- */
-
-  /* Spiel-Layout auf eine Spalte umstellen */
   #game-screen {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    grid-template-areas:
-      "header"
-      "main"
-      "sidebar";
-    padding: 10px;
-    gap: 15px;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "header header" "sidebar main";
+    gap: 20px;
+    padding: 0;
   }
-
+  #game-header {
+    text-align: left;
+  }
   #player-sidebar {
-    height: auto;
-    padding: 10px;
-    border-top: 2px solid var(--primary-color);
+    order: 0;
+    border-right: 1px solid rgba(108, 106, 231, 0.2);
+    padding: 20px;
   }
-
   #player-sidebar h4 {
-    margin-bottom: 10px;
-  }
-
-  /* Spieler in der Liste nebeneinander fließen lassen */
-  #game-player-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  #game-player-list .player-item {
-    background-color: rgba(0, 0, 0, 0.3);
-    padding: 5px 10px;
-    margin-bottom: 0;
-  }
-
-  /* Fragen-Auswahl untereinander anordnen */
-  .question-selection-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* Startseite lesbarer machen */
-  .start-option h2 {
+    display: block;
+    text-align: left;
+    margin-bottom: 20px;
     font-size: 1.8rem;
+  }
+  #game-player-list {
+    flex-direction: column;
+    overflow-x: visible;
+    align-items: stretch;
+    padding: 0;
+  }
+  .player-item {
+    width: 100%;
+    font-size: 1rem;
+    padding: 10px 20px;
+  }
+  #main-content {
+    padding: 0 20px;
+  }
+  .question-selection-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* =============================================== */
+/* ===== GROSSER DESKTOP (ab 1200px) ===== */
+/* =============================================== */
+@media (min-width: 1200px) {
+  #app-container {
+    font-size: 105%;
+  }
+  #game-screen {
+    grid-template-columns: 320px 1fr;
   }
 }

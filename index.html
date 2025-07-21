@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Falsche Wahrheit - Start</title>
+    <title>False Truth - Start</title>
     <link rel="stylesheet" href="style.css" />
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <!-- Lokale Skripte -->
     <script src="js/firebase-init.js"></script>
     <script src="js/firebase-helpers.js"></script>
   </head>
@@ -16,54 +14,43 @@
     <div id="app-container">
       <div class="screen">
         <div class="card">
-          <h1>Falsche Wahrheit</h1>
-
-          <!-- Option 1: Spiel hosten -->
+          <h1>False Truth</h1>
           <div class="start-option">
-            <h2>Neues Spiel starten</h2>
-            <p>Erstelle einen neuen Spielraum und lade deine Freunde ein.</p>
-            <button id="host-game-btn" class="btn">Spiel hosten</button>
+            <h2>Start a New Game</h2>
+            <p>Create a new game room and invite your friends.</p>
+            <button id="host-game-btn" class="btn">Host Game</button>
           </div>
-
           <div style="height: 2px; background: #555; margin: 40px 0"></div>
-
-          <!-- Option 2: Spiel beitreten -->
           <div class="start-option">
-            <h2>Einem Spiel beitreten</h2>
-            <p>Gib den Raumcode ein, den du von einem Freund erhalten hast.</p>
+            <h2>Join a Game</h2>
+            <p>Enter the room code you received from a friend.</p>
             <input
               type="text"
               id="room-code-input"
-              placeholder="Raumcode eingeben"
+              placeholder="Enter Room Code"
               maxlength="4"
               style="text-transform: uppercase"
             />
-            <button id="join-room-btn" class="btn secondary">Beitreten</button>
+            <button id="join-room-btn" class="btn secondary">Join</button>
           </div>
         </div>
       </div>
     </div>
-
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const hostGameBtn = document.getElementById("host-game-btn");
         const joinRoomBtn = document.getElementById("join-room-btn");
         const roomCodeInput = document.getElementById("room-code-input");
-
-        // --- Logik für das Hosten ---
         hostGameBtn.addEventListener("click", () => {
           const roomCode = generateRoomCode();
           window.location.href = `lobby.html?room=${roomCode}`;
         });
-
-        // --- Logik für das Beitreten ---
         function joinRoom() {
           const roomCode = roomCodeInput.value.trim().toUpperCase();
           if (roomCode.length !== 4) {
-            alert("Bitte gib einen gültigen, 4-stelligen Raumcode ein.");
+            alert("Please enter a valid 4-character room code.");
             return;
           }
-
           const gameRef = getGameRef(roomCode);
           gameRef
             .get()
@@ -71,18 +58,15 @@
               if (snapshot.exists()) {
                 window.location.href = `lobby.html?room=${roomCode}`;
               } else {
-                alert(`Fehler: Der Raum "${roomCode}" wurde nicht gefunden.`);
+                alert(`Error: Room "${roomCode}" not found.`);
                 roomCodeInput.value = "";
               }
             })
             .catch((error) => {
-              console.error("Fehler bei der Überprüfung des Raums:", error);
-              alert(
-                "Es gab einen Fehler bei der Verbindung zur Datenbank. Bitte versuche es erneut."
-              );
+              console.error("Error:", error);
+              alert("A connection error occurred. Please try again.");
             });
         }
-
         joinRoomBtn.addEventListener("click", joinRoom);
         roomCodeInput.addEventListener("keyup", (e) => {
           if (e.key === "Enter") {
