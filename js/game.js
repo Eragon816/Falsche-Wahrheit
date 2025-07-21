@@ -1,13 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("game.js: Skript geladen.");
-
   const LOCAL_PLAYER_KEY = "falscheWahrheitPlayer";
   function getLocalPlayerIdentity() {
     const playerJSON = sessionStorage.getItem(LOCAL_PLAYER_KEY);
     return playerJSON ? JSON.parse(playerJSON) : null;
   }
   const localPlayer = getLocalPlayerIdentity();
-
   const roomCode = getRoomCodeFromURL();
 
   if (!roomCode || !localPlayer || localPlayer.roomCode !== roomCode) {
@@ -24,18 +21,15 @@ document.addEventListener("DOMContentLoaded", () => {
   gameRef.on("value", (snapshot) => {
     const gameState = snapshot.val();
     if (!gameState) {
-      alert("Das Spiel wurde beendet oder existiert nicht mehr.");
+      alert("Das Spiel wurde beendet.");
       window.location.href = "index.html";
       return;
     }
-
     localGameState = gameState;
-
     if (localGameState.currentPhase === "END") {
       window.location.href = `winner.html?room=${roomCode}`;
       return;
     }
-
     updateFullUI(localGameState);
   });
 
@@ -43,7 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const gamePlayerList = document.getElementById("game-player-list");
   const roundTitle = document.getElementById("round-title");
   const judgeNameEl = document.getElementById("judge-name");
-
   const sampleQuestions = [
     "Warum haben Pinguine keinen Führerschein?",
     "Warum ist der Himmel blau und nicht grün?",
@@ -68,10 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
       playerEl.className = "player-item";
       if (p.id === state.judgeId) playerEl.classList.add("judge");
       if (p.isEliminated) playerEl.classList.add("eliminated");
-
       let playerText = p.name;
       if (p.id === localPlayer.playerId) playerText += " (Du)";
-
       playerEl.textContent = playerText;
       gamePlayerList.appendChild(playerEl);
     });
@@ -79,18 +70,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderPhaseUI(state) {
     mainContent.innerHTML = "";
-    const amITheJudge = localPlayer.playerId === state.judgeId;
-
-    // === NEU: Zentrale Überprüfung, ob der Spieler ausgeschieden ist ===
     const myPlayerData = state.players.find(
       (p) => p.id === localPlayer.playerId
     );
     if (myPlayerData && myPlayerData.isEliminated) {
-      mainContent.innerHTML = `<h2>Du bist ausgeschieden!</h2><p>Du kannst jetzt den restlichen Runden als Zuschauer folgen. Viel Glück den anderen!</p>`;
-      return; // Beendet die Funktion hier, keine weitere UI wird angezeigt
+      mainContent.innerHTML = `<h2>Du bist ausgeschieden!</h2><p>Du kannst jetzt den restlichen Runden als Zuschauer folgen.</p>`;
+      return;
     }
-    // ====================================================================
 
+    const amITheJudge = localPlayer.playerId === state.judgeId;
     switch (state.currentPhase) {
       case "QUESTION_SELECTION":
         if (amITheJudge) showQuestionSelection(state);
@@ -98,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const judge = state.players.find((p) => p.id === state.judgeId);
           mainContent.innerHTML = `<h2>Warten...</h2><p>Der Richter, <strong>${
             judge ? judge.name : ""
-          }</strong>, wählt eine Frage aus.</p>`;
+          }</strong>, wählt eine Frage.</p>`;
         }
         break;
       case "ANSWERING":
@@ -117,19 +105,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         break;
       default:
-        mainContent.innerHTML = `<h2>Ein Fehler ist aufgetreten (Unbekannte Phase).</h2>`;
+        mainContent.innerHTML = `<h2>Ein Fehler ist aufgetreten.</h2>`;
         break;
     }
   }
 
-  // Diese Funktion ist der Schlüssel! Sie filtert ausgeschiedene Spieler heraus.
   function getActiveParticipants(state) {
     return state.players.filter((p) => !p.isJudge && !p.isEliminated);
   }
 
   function showQuestionSelection(state) {
     const wrapper = document.createElement("div");
-    wrapper.innerHTML = `<h2>Fragen-Auswahl (Du bist der Richter)</h2><p>Wähle eine Frage für diese Runde:</p><div class="question-selection-grid"></div>`;
+    wrapper.innerHTML = `<h2>Fragen-Auswahl (Du bist Richter)</h2><p>Wähle eine Frage:</p><div class="question-selection-grid"></div>`;
     const grid = wrapper.querySelector(".question-selection-grid");
     const shuffled = sampleQuestions.sort(() => 0.5 - Math.random());
     const selectedQuestions = shuffled.slice(0, 4);
@@ -146,28 +133,25 @@ document.addEventListener("DOMContentLoaded", () => {
   function selectQuestion(question) {
     localGameState.currentQuestion = question;
     localGameState.currentPhase = "ANSWERING";
-    localGameState.answers = [];
     saveGameState(roomCode, localGameState);
   }
 
   function showAnswerInput(state) {
     const amITheJudge = localPlayer.playerId === state.judgeId;
-    const participants = getActiveParticipants(state); // Nutzt die korrekte Filterung
     const myAnswer = (state.answers || []).find(
       (a) => a.playerId === localPlayer.playerId
     );
 
     if (amITheJudge) {
-      mainContent.innerHTML = `<h2>Warten auf Antworten</h2><p>Die aktiven Teilnehmer geben ihre Antworten ein.</p>`;
+      mainContent.innerHTML = `<h2>Warten auf Antworten</h2><p>Die Teilnehmer geben ihre Antworten ein.</p>`;
       return;
     }
-
     if (myAnswer) {
       mainContent.innerHTML = `<h2>Antwort abgegeben!</h2><p>Warte auf die anderen Spieler.</p>`;
       return;
     }
 
-    mainContent.innerHTML = `<h2>Antwortphase</h2><p class="question-card">"${state.currentQuestion}"</p><p><strong>${localPlayer.playerName}</strong>, gib deine falsche Antwort ein:</p><textarea id="answer-input" placeholder="Deine absurde Antwort..."></textarea><button id="submit-answer-btn" class="btn">Antwort einreichen</button>`;
+    mainContent.innerHTML = `<h2>Antwortphase</h2><p class="question-card">"${state.currentQuestion}"</p><p><strong>${localPlayer.playerName}</strong>, gib deine falsche Antwort ein:</p><textarea id="answer-input"></textarea><button id="submit-answer-btn" class="btn">Einreichen</button>`;
     const input = document.getElementById("answer-input");
     const btn = document.getElementById("submit-answer-btn");
     input.focus();
@@ -179,8 +163,10 @@ document.addEventListener("DOMContentLoaded", () => {
           playerId: localPlayer.playerId,
           answer: answer,
         });
-
-        if (localGameState.answers.length >= participants.length) {
+        if (
+          localGameState.answers.length >=
+          getActiveParticipants(localGameState).length
+        ) {
           distributeAnswers();
         } else {
           saveGameState(roomCode, localGameState);
@@ -236,26 +222,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const amIDefending = localPlayer.playerId === defender.id;
     mainContent.innerHTML = `<h2>Verteidigungsphase</h2><p class="question-card">"${
       state.currentQuestion
-    }"</p><p>Jetzt ist <strong>${
+    }"</p><p><strong>${
       defender.name
-    }</strong> an der Reihe, diese Antwort zu verteidigen:</p><div class="answer-to-defend">"${
+    }</strong> verteidigt:</p><div class="answer-to-defend">"${
       assigned.answer
     }"</div>${
       amIDefending
-        ? `<button id="next-defense-btn" class="btn">Ich bin fertig, nächster!</button>`
-        : `<p>Höre gut zu, was ${defender.name} zu sagen hat...</p>`
+        ? `<button id="next-defense-btn" class="btn">Fertig, nächster!</button>`
+        : `<p>Höre gut zu...</p>`
     }`;
     if (amIDefending) {
       document.getElementById("next-defense-btn").onclick = () => {
-        localGameState.currentPlayerIndexForDefense =
-          (localGameState.currentPlayerIndexForDefense || 0) + 1;
+        localGameState.currentPlayerIndexForDefense++;
         saveGameState(roomCode, localGameState);
       };
     }
   }
 
   function showJudgingScreen(state) {
-    mainContent.innerHTML = `<h2>Entscheidung (Du bist der Richter)</h2><p>Wessen Verteidigung war am wenigsten überzeugend? Wähle den Spieler, der ausscheiden soll.</p><div class="judgement-grid"></div>`;
+    mainContent.innerHTML = `<h2>Entscheidung (Du bist Richter)</h2><p>Wer war am wenigsten überzeugend?</p><div class="judgement-grid"></div>`;
     const grid = mainContent.querySelector(".judgement-grid");
     getActiveParticipants(state).forEach((p) => {
       const btn = document.createElement("button");
@@ -266,18 +251,34 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // === NEUE, SAUBERE FUNKTION ZUM STARTEN EINER NEUEN RUNDE ===
+  function startNewRound() {
+    localGameState.currentRound++;
+    localGameState.currentPhase = "QUESTION_SELECTION";
+
+    // WICHTIG: Alte Rundendaten zurücksetzen!
+    localGameState.currentQuestion = "";
+    localGameState.answers = [];
+    localGameState.assignedAnswers = [];
+    localGameState.currentPlayerIndexForDefense = 0;
+
+    saveGameState(roomCode, localGameState);
+  }
+  // ==========================================================
+
   function eliminatePlayer(playerId) {
     const player = localGameState.players.find((p) => p.id === playerId);
     if (player) {
       player.isEliminated = true;
     }
+
     if (getActiveParticipants(localGameState).length <= 1) {
       localGameState.winner = getActiveParticipants(localGameState)[0] || null;
       localGameState.currentPhase = "END";
+      saveGameState(roomCode, localGameState);
     } else {
-      localGameState.currentRound++;
-      localGameState.currentPhase = "QUESTION_SELECTION";
+      // ALT: Wurde direkt hier gemacht. NEU: Rufen die saubere Funktion auf.
+      startNewRound();
     }
-    saveGameState(roomCode, localGameState);
   }
 });
