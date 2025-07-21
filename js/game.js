@@ -1,59 +1,41 @@
 document.addEventListener("DOMContentLoaded", () => {
   console.log("game.js: Skript geladen.");
 
-  // === Lokale Spieler-Identität holen ===
   const LOCAL_PLAYER_KEY = "falscheWahrheitPlayer";
   function getLocalPlayerIdentity() {
     const playerJSON = sessionStorage.getItem(LOCAL_PLAYER_KEY);
     return playerJSON ? JSON.parse(playerJSON) : null;
   }
   const localPlayer = getLocalPlayerIdentity();
-  console.log("game.js: Lokaler Spieler aus sessionStorage:", localPlayer);
 
   const roomCode = getRoomCodeFromURL();
-  console.log("game.js: Raumcode aus URL:", roomCode);
 
-  // === SICHERHEITSCHECKS ===
-  if (!roomCode) {
-    alert("FEHLER: Kein Raumcode gefunden. Zurück zur Startseite.");
-    window.location.href = "index.html";
-    return;
-  }
-  if (!localPlayer || localPlayer.roomCode !== roomCode) {
+  if (!roomCode || !localPlayer || localPlayer.roomCode !== roomCode) {
     alert(
-      "FEHLER: Spieler-Identität nicht gefunden oder ungültig für diesen Raum. Zurück zur Startseite."
+      "FEHLER: Spieler-Identität oder Raumcode ungültig. Zurück zur Startseite."
     );
     window.location.href = "index.html";
     return;
   }
-  // ========================
 
   const gameRef = getGameRef(roomCode);
   let localGameState = {};
 
-  console.log("game.js: Warte auf Daten von Firebase...");
   gameRef.on("value", (snapshot) => {
-    console.log("game.js: Firebase-Daten empfangen!");
     const gameState = snapshot.val();
     if (!gameState) {
-      console.error(
-        "game.js: Spielzustand in Firebase ist null. Spiel könnte beendet sein."
-      );
       alert("Das Spiel wurde beendet oder existiert nicht mehr.");
       window.location.href = "index.html";
       return;
     }
 
     localGameState = gameState;
-    console.log("game.js: Aktueller Spielzustand:", localGameState);
 
     if (localGameState.currentPhase === "END") {
-      console.log("game.js: Spiel ist zu Ende. Leite zu winner.html weiter.");
       window.location.href = `winner.html?room=${roomCode}`;
       return;
     }
 
-    console.log("game.js: Rufe updateFullUI auf.");
     updateFullUI(localGameState);
   });
 
@@ -72,17 +54,11 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   function updateFullUI(state) {
-    console.log("updateFullUI: Starte UI-Update.");
     updateGamePlayerList(state);
     renderPhaseUI(state);
     roundTitle.textContent = `Runde ${state.currentRound || 1}`;
     const judge = state.players.find((p) => p.id === state.judgeId);
-    if (judge) {
-      judgeNameEl.textContent = judge.name;
-    } else {
-      console.warn("updateFullUI: Richter nicht im Spieler-Array gefunden!");
-    }
-    console.log("updateFullUI: UI-Update abgeschlossen.");
+    if (judge) judgeNameEl.textContent = judge.name;
   }
 
   function updateGamePlayerList(state) {
@@ -102,61 +78,56 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderPhaseUI(state) {
-    mainContent.innerHTML = "<!-- Inhalt wird neu gerendert -->"; // Leeren mit Kommentar für Debugging
+    mainContent.innerHTML = "";
     const amITheJudge = localPlayer.playerId === state.judgeId;
-    console.log(
-      `renderPhaseUI: Aktuelle Phase: ${state.currentPhase}, Bin ich Richter? ${amITheJudge}`
+
+    // === NEU: Zentrale Überprüfung, ob der Spieler ausgeschieden ist ===
+    const myPlayerData = state.players.find(
+      (p) => p.id === localPlayer.playerId
     );
+    if (myPlayerData && myPlayerData.isEliminated) {
+      mainContent.innerHTML = `<h2>Du bist ausgeschieden!</h2><p>Du kannst jetzt den restlichen Runden als Zuschauer folgen. Viel Glück den anderen!</p>`;
+      return; // Beendet die Funktion hier, keine weitere UI wird angezeigt
+    }
+    // ====================================================================
 
     switch (state.currentPhase) {
       case "QUESTION_SELECTION":
-        if (amITheJudge) {
-          showQuestionSelection(state);
-        } else {
+        if (amITheJudge) showQuestionSelection(state);
+        else {
           const judge = state.players.find((p) => p.id === state.judgeId);
           mainContent.innerHTML = `<h2>Warten...</h2><p>Der Richter, <strong>${
-            judge ? judge.name : "Unbekannt"
-          }</strong>, wählt gerade eine Frage aus.</p>`;
+            judge ? judge.name : ""
+          }</strong>, wählt eine Frage aus.</p>`;
         }
         break;
-
       case "ANSWERING":
         showAnswerInput(state);
         break;
-
       case "DEFENDING":
         showDefenseTurn(state);
         break;
-
       case "JUDGING":
-        if (amITheJudge) {
-          showJudgingScreen(state);
-        } else {
+        if (amITheJudge) showJudgingScreen(state);
+        else {
           const judge = state.players.find((p) => p.id === state.judgeId);
           mainContent.innerHTML = `<h2>Der Richter entscheidet...</h2><p><strong>${
-            judge ? judge.name : "Unbekannt"
-          }</strong> überlegt, wer die schwächste Verteidigung hatte.</p>`;
+            judge ? judge.name : ""
+          }</strong> überlegt, wer rausfliegt.</p>`;
         }
         break;
-
       default:
-        console.error(
-          `renderPhaseUI: Unbekannte Phase "${state.currentPhase}"!`
-        );
-        mainContent.innerHTML = `<h2>Ein Fehler ist aufgetreten (Unbekannte Phase).</h2><p>Warte auf Synchronisation...</p>`;
+        mainContent.innerHTML = `<h2>Ein Fehler ist aufgetreten (Unbekannte Phase).</h2>`;
         break;
     }
   }
 
-  // Die restlichen Funktionen bleiben strukturell gleich wie in der letzten Antwort.
-  // Ich füge sie hier der Vollständigkeit halber ein.
-
+  // Diese Funktion ist der Schlüssel! Sie filtert ausgeschiedene Spieler heraus.
   function getActiveParticipants(state) {
     return state.players.filter((p) => !p.isJudge && !p.isEliminated);
   }
 
   function showQuestionSelection(state) {
-    console.log("showQuestionSelection: Zeige UI für Richter.");
     const wrapper = document.createElement("div");
     wrapper.innerHTML = `<h2>Fragen-Auswahl (Du bist der Richter)</h2><p>Wähle eine Frage für diese Runde:</p><div class="question-selection-grid"></div>`;
     const grid = wrapper.querySelector(".question-selection-grid");
@@ -173,7 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function selectQuestion(question) {
-    console.log("selectQuestion: Frage ausgewählt:", question);
     localGameState.currentQuestion = question;
     localGameState.currentPhase = "ANSWERING";
     localGameState.answers = [];
@@ -182,13 +152,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showAnswerInput(state) {
     const amITheJudge = localPlayer.playerId === state.judgeId;
-    const participants = getActiveParticipants(state);
+    const participants = getActiveParticipants(state); // Nutzt die korrekte Filterung
     const myAnswer = (state.answers || []).find(
       (a) => a.playerId === localPlayer.playerId
     );
 
     if (amITheJudge) {
-      mainContent.innerHTML = `<h2>Warten auf Antworten</h2><p>Die Teilnehmer geben gerade ihre absurden Antworten ein.</p>`;
+      mainContent.innerHTML = `<h2>Warten auf Antworten</h2><p>Die aktiven Teilnehmer geben ihre Antworten ein.</p>`;
       return;
     }
 
@@ -197,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    mainContent.innerHTML = `<h2>Antwortphase</h2><p class="question-card">"${state.currentQuestion}"</p><p><strong>${localPlayer.playerName}</strong>, gib deine kreative, falsche Antwort ein:</p><textarea id="answer-input" placeholder="Deine absurde Antwort..."></textarea><button id="submit-answer-btn" class="btn">Antwort einreichen</button>`;
+    mainContent.innerHTML = `<h2>Antwortphase</h2><p class="question-card">"${state.currentQuestion}"</p><p><strong>${localPlayer.playerName}</strong>, gib deine falsche Antwort ein:</p><textarea id="answer-input" placeholder="Deine absurde Antwort..."></textarea><button id="submit-answer-btn" class="btn">Antwort einreichen</button>`;
     const input = document.getElementById("answer-input");
     const btn = document.getElementById("submit-answer-btn");
     input.focus();
@@ -209,6 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
           playerId: localPlayer.playerId,
           answer: answer,
         });
+
         if (localGameState.answers.length >= participants.length) {
           distributeAnswers();
         } else {
@@ -226,9 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function distributeAnswers() {
-    console.log(
-      "distributeAnswers: Verteile Antworten und starte Verteidigungsphase."
-    );
     const participants = getActiveParticipants(localGameState);
     let answersToDistribute = [...localGameState.answers];
     let shuffledAnswers = answersToDistribute.sort(() => Math.random() - 0.5);
@@ -300,7 +268,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function eliminatePlayer(playerId) {
     const player = localGameState.players.find((p) => p.id === playerId);
-    player.isEliminated = true;
+    if (player) {
+      player.isEliminated = true;
+    }
     if (getActiveParticipants(localGameState).length <= 1) {
       localGameState.winner = getActiveParticipants(localGameState)[0] || null;
       localGameState.currentPhase = "END";
