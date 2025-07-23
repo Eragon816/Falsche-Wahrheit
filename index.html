@@ -40,13 +40,7 @@
             id="room-code-input"
             placeholder="ROOM CODE"
             maxlength="4"
-            style="
-              text-transform: uppercase;
-              text-align: center;
-              font-family: var(--font-header);
-              letter-spacing: 8px;
-              font-size: 2rem;
-            "
+            style="text-transform: uppercase; text-align: center"
           />
           <button id="join-room-btn" class="btn secondary">Join Room</button>
           <button class="back-btn">Back</button>
@@ -74,21 +68,18 @@
           .querySelectorAll(".back-btn")
           .forEach((btn) => (btn.onclick = () => showStep(initialChoice)));
 
+        // KORRIGIERTE createGame FUNKTION
         function createGame(mode) {
           const roomCode = generateRoomCode();
-          const initialState = {
-            roomCode: roomCode,
-            gameMode: mode, // Speichert den Spielmodus
-            players: [],
-            hostId: null,
-            currentPhase: "LOBBY",
-          };
-          saveGameState(roomCode, initialState);
+          // Der Spielzustand wird jetzt in lobby.js erstellt,
+          // wir speichern den Modus temporär, damit lobby.js ihn lesen kann.
+          sessionStorage.setItem("pendingGameMode", mode);
           window.location.href = `lobby.html?room=${roomCode}`;
         }
 
         document.getElementById("host-classic-btn").onclick = () =>
           createGame("classic");
+        // KORREKTUR: Hier steht jetzt 'custom'
         document.getElementById("host-custom-btn").onclick = () =>
           createGame("custom");
 
@@ -110,6 +101,11 @@
             });
         }
         document.getElementById("join-room-btn").onclick = joinRoom;
+        document
+          .getElementById("room-code-input")
+          .addEventListener("keyup", (e) => {
+            if (e.key === "Enter") joinRoom();
+          });
       });
     </script>
   </body>

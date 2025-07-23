@@ -31,9 +31,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const gameStateFromFirebase = snapshot.val();
 
     if (!gameStateFromFirebase) {
-      console.log(`Room ${roomCode} does not exist. Initializing...`);
+      // Dies ist der erste Besuch in diesem Raum (nur der Host macht das).
+      // Hole den Modus, den der Host auf der Startseite ausgewählt hat.
+      const gameMode = sessionStorage.getItem("pendingGameMode") || "classic"; // Standardmäßig 'classic' als Fallback
+      sessionStorage.removeItem("pendingGameMode"); // Wichtig: Aufräumen, damit es nicht wiederverwendet wird
+
+      console.log(
+        `Room ${roomCode} does not exist. Initializing with mode: ${gameMode}`
+      );
       const initialState = {
         roomCode: roomCode,
+        gameMode: gameMode, // Spielmodus von Anfang an speichern
         players: [],
         hostId: null,
         currentPhase: "LOBBY",
@@ -43,6 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     localGameState = gameStateFromFirebase;
+
+    // Sicherheits-Fallback, falls ein altes Spiel ohne Modus existiert
+    if (!localGameState.gameMode) {
+      localGameState.gameMode = "classic";
+    }
+
     console.log("Game state received:", localGameState);
 
     if (localGameState.currentPhase !== "LOBBY") {
@@ -72,12 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const playerEl = document.createElement("div");
         playerEl.className = "lobby-player";
 
-        let playerText = `<span>${player.name}</span>`; // Name in ein span wickeln
+        let playerText = `<span>${player.name}</span>`;
         if (player.id === state.hostId) {
           playerText += ' <span class="host-crown">👑</span>';
         }
 
-        // NEU: Kick-Button hinzufügen, wenn ich der Host bin und es nicht ich selbst bin
         if (amITheHost && player.id !== localPlayer.playerId) {
           playerText += `<button class="kick-btn" data-kick-id="${player.id}">×</button>`;
         }
@@ -87,7 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Event-Listener für alle neuen Kick-Buttons hinzufügen
     addKickListeners();
 
     const enoughPlayers = state.players && state.players.length >= 4;
@@ -141,7 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
     saveGameState(roomCode, localGameState);
   }
 
-  // KORRIGIERTE startGame FUNKTION
   function startGame() {
     const localPlayer = getLocalPlayerIdentity();
     if (!localPlayer || localPlayer.playerId !== localGameState.hostId) {
@@ -158,7 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
     localGameState.currentRound = 1;
     localGameState.currentPhase = "QUESTION_SELECTION";
 
-    // Alle runden-spezifischen Daten initialisieren
     localGameState.currentQuestion = "";
     localGameState.answers = [];
     localGameState.usedAnswers = [];
@@ -169,7 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
     saveGameState(roomCode, localGameState);
   }
 
-  // NEUE FUNKTIONEN für das Kicken
   function addKickListeners() {
     document.querySelectorAll(".kick-btn").forEach((button) => {
       button.onclick = (e) => {
@@ -184,7 +193,6 @@ document.addEventListener("DOMContentLoaded", () => {
       localGameState.players = localGameState.players.filter(
         (p) => p.id !== playerId
       );
-      // Optional: Wenn der gekickte Spieler der Host war, einen neuen Host bestimmen
       if (localGameState.hostId === playerId) {
         if (localGameState.players.length > 0) {
           localGameState.hostId = localGameState.players[0].id;
