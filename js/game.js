@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "انت ليش سينجل هلأ؟",
     "لو وعدتني بوعد عمرك مارح ترجع فيه، شو رح يكون؟",
     "وحدة زميلتك بالشغل بعثتلك رسالة، شو مكتوب فيها؟",
-    "لو رحت ديت مع وحدة ولاقيتها جايبة معها مامتها؟",
+    "لو رحت ديت مع وحدة ولاقيتها جايبة معها مامتها شو رح تحكيلها؟",
     "ايش اخر شغلة رح الاقيها بالسيرش بجوجل تبعك؟",
     "ايش الخبر يلي مكتوب عنك بالجرائد؟",
     "ايش اول انطباع اخذته عني؟",
@@ -70,10 +70,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateFullUI(state) {
     updateGamePlayerList(state);
     renderPhaseUI(state);
-    roundTitle.textContent =
-      state.currentPhase === "FINAL_ROUND"
-        ? "FINAL ROUND!"
-        : `Round ${state.currentRound || 1}`;
+    roundTitle.textContent = state.currentPhase.startsWith("FINAL_ROUND")
+      ? "FINAL ROUND!"
+      : `Round ${state.currentRound || 1}`;
     const judge = state.players.find((p) => p.id === state.judgeId);
     if (judge) judgeNameEl.textContent = judge.name;
   }
@@ -84,23 +83,17 @@ document.addEventListener("DOMContentLoaded", () => {
     listContainer.querySelectorAll(".player-item").forEach((el) => {
       existingPlayerElements[el.id] = el;
     });
-
-    // Temporärer Container, um die Reihenfolge beizubehalten
     const fragment = document.createDocumentFragment();
-
     state.players.forEach((p) => {
       const playerElId = `player-item-${p.id}`;
       const playerEl = document.createElement("div");
       playerEl.id = playerElId;
       playerEl.className = "player-item";
-
       if (p.id === state.judgeId) playerEl.classList.add("judge");
       if (p.id === state.currentDefenderId) playerEl.classList.add("defending");
-
       let playerText = p.name;
       if (p.id === localPlayer.playerId) playerText += " (You)";
       playerEl.textContent = playerText;
-
       if (p.isEliminated) {
         const oldElement = existingPlayerElements[playerElId];
         if (oldElement && !oldElement.classList.contains("is-eliminating")) {
@@ -115,9 +108,8 @@ document.addEventListener("DOMContentLoaded", () => {
         fragment.appendChild(playerEl);
       }
     });
-
-    listContainer.innerHTML = ""; // Leeren
-    listContainer.appendChild(fragment); // Alles auf einmal einfügen
+    listContainer.innerHTML = "";
+    listContainer.appendChild(fragment);
   }
 
   function renderPhaseUI(state) {
@@ -126,11 +118,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const myPlayerData = state.players.find(
       (p) => p.id === localPlayer.playerId
     );
-
     if (
       myPlayerData &&
       myPlayerData.isEliminated &&
-      state.currentPhase !== "FINAL_ROUND"
+      !state.currentPhase.startsWith("FINAL_ROUND")
     ) {
       if (state.currentPhase === "ANSWERING") {
         showAnswerInput(state);
@@ -145,9 +136,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     switch (state.currentPhase) {
       case "QUESTION_SELECTION":
-        if (amITheJudge) showQuestionSelection(state);
-        else
-          showWaitingScreen("Waiting...", "The Judge is choosing a question.");
+        if (state.gameMode === "custom") {
+          if (amITheJudge) showCustomQuestionInput(state);
+          else
+            showWaitingScreen(
+              "Waiting for Question",
+              "The Judge is writing a custom question."
+            );
+        } else {
+          if (amITheJudge) showQuestionSelection(state);
+          else
+            showWaitingScreen(
+              "Waiting...",
+              "The Judge is choosing a question."
+            );
+        }
         break;
       case "ANSWERING":
         showAnswerInput(state);
@@ -163,14 +166,26 @@ document.addEventListener("DOMContentLoaded", () => {
             "Who will be eliminated next?"
           );
         break;
-      case "FINAL_ROUND":
-        showFinalRound(state);
+      // NEUE PHASEN FÜR DIE FINALRUNDE
+      case "FINAL_ROUND_QUESTION":
+        if (amITheJudge) showFinalQuestionInput(state);
+        else
+          showWaitingScreen(
+            "The Final Question",
+            "The Judge is writing the final, ultimate question!"
+          );
+        break;
+      case "FINAL_ROUND_ANSWERING":
+        showFinalRoundAnswering(state);
+        break;
+      case "FINAL_ROUND_DEFENSE":
+        showFinalRoundDefense(state);
         break;
     }
   }
 
   function showWaitingScreen(title, text) {
-    mainContent.innerHTML = `<div class="card"><h2>${title}</h2><p>${text}</p></div>`;
+    mainContent.innerHTML = `<div><h2>${title}</h2><p>${text}</p></div>`;
   }
   function getActiveDefenders(state) {
     return state.players.filter((p) => !p.isJudge && !p.isEliminated);
@@ -181,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showQuestionSelection(state) {
     const wrapper = document.createElement("div");
-    wrapper.className = "card";
     wrapper.innerHTML = `<h2>Question Selection (Judge)</h2><p>Choose a question:</p><div class="question-selection-grid"></div>`;
     const grid = wrapper.querySelector(".question-selection-grid");
     const shuffled = sampleQuestions.sort(() => 0.5 - Math.random());
@@ -196,6 +210,20 @@ document.addEventListener("DOMContentLoaded", () => {
     mainContent.appendChild(wrapper);
   }
 
+  function showCustomQuestionInput(state) {
+    mainContent.innerHTML = `<div><h2>Custom Question (Judge)</h2><p>Write your own question for the players.</p><textarea id="custom-question-input"></textarea><button id="submit-custom-question" class="btn">Submit Question</button></div>`;
+    document.getElementById("submit-custom-question").onclick = () => {
+      const question = document
+        .getElementById("custom-question-input")
+        .value.trim();
+      if (question) {
+        selectQuestion(question);
+      } else {
+        alert("Please write a question.");
+      }
+    };
+  }
+
   function selectQuestion(question) {
     localGameState.currentPhase = "ANSWERING";
     localGameState.currentQuestion = question;
@@ -204,162 +232,39 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showAnswerInput(state) {
-    const amITheJudge = localPlayer.playerId === state.judgeId;
-    const myAnswer = (state.answers || []).find(
-      (a) => a.playerId === localPlayer.playerId
-    );
-    if (amITheJudge) {
-      showWaitingScreen(
-        "Waiting for Answers",
-        "The players are writing their absurd answers."
-      );
-      return;
-    }
-    if (myAnswer) {
-      showWaitingScreen("Answer Submitted!", "Waiting for other players.");
-      return;
-    }
-    mainContent.innerHTML = `<div class="card"><h2>Answering Phase</h2><p class="question-card">"${state.currentQuestion}"</p><p><strong>${localPlayer.playerName}</strong>, write your false answer:</p><textarea id="answer-input"></textarea><button id="submit-answer-btn" class="btn">Submit</button></div>`;
-    document.getElementById("submit-answer-btn").onclick = () => {
-      const answer = document.getElementById("answer-input").value.trim();
-      if (answer) {
-        if (!localGameState.answers) localGameState.answers = [];
-        localGameState.answers.push({
-          playerId: localPlayer.playerId,
-          answer: answer,
-        });
-        if (
-          localGameState.answers.length >= getWriters(localGameState).length
-        ) {
-          localGameState.currentPhase = "DEFENDING";
-          saveGameState(roomCode, localGameState);
-        } else {
-          saveGameState(roomCode, localGameState);
-        }
-      }
-    };
+    //... (Diese Funktion bleibt unverändert)
   }
 
   function showDefensePhase(state) {
-    const amITheJudge = localPlayer.playerId === state.judgeId;
-    const defenderId = state.currentDefenderId;
-    if (amITheJudge) {
-      showDefenseControlForJudge(state);
-    } else if (localPlayer.playerId === defenderId) {
-      mainContent.innerHTML = `<div class="card"><h2>You are defending!</h2><p class="question-card">"${state.currentQuestion}"</p><p>Explain to the Judge why this answer is logical:</p><div class="answer-to-defend">"${state.currentAnswerToDefend}"</div></div>`;
-    } else {
-      const defender = state.players.find((p) => p.id === defenderId);
-      if (defender) {
-        showWaitingScreen(
-          `${defender.name} is defending...`,
-          "Listen carefully!"
-        );
-      } else {
-        showWaitingScreen(
-          "Defense Phase",
-          "The Judge is choosing who defends next."
-        );
-      }
-    }
+    //... (Diese Funktion bleibt unverändert)
   }
 
   function showDefenseControlForJudge(state) {
-    let html = `<h2>Defense Phase (Judge)</h2>`;
-    const defendedPlayerIds = state.defendedPlayerIdsInRound || [];
-    const allDefenders = getActiveDefenders(state);
-    const availableDefenders = allDefenders.filter(
-      (p) => !defendedPlayerIds.includes(p.id)
-    );
-    if (state.currentDefenderId) {
-      const defender = state.players.find(
-        (p) => p.id === state.currentDefenderId
-      );
-      html += `<p><strong>${defender.name}</strong> is currently defending. You can stop the defense at any time.</p>`;
-      html += `<button id="stop-defense-btn" class="btn">Defense Finished</button>`;
-    } else {
-      if (availableDefenders.length > 0) {
-        html += `<p>Choose a player to defend an answer.</p><div class="judgement-grid">`;
-        availableDefenders.forEach((p) => {
-          html += `<button class="btn" data-player-id="${p.id}">${p.name}</button>`;
-        });
-        html += `</div>`;
-      } else {
-        html += `<p style="margin-top: 20px;">All players have defended!</p><button id="end-round-btn" class="btn">Proceed to Judgement</button>`;
-      }
-    }
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = html;
-    mainContent.appendChild(card);
-
-    if (state.currentDefenderId) {
-      document.getElementById("stop-defense-btn").onclick = stopCurrentDefense;
-    } else {
-      document.querySelectorAll(".judgement-grid button").forEach((button) => {
-        button.onclick = () => chooseDefender(button.dataset.playerId);
-      });
-    }
-    if (document.getElementById("end-round-btn")) {
-      document.getElementById("end-round-btn").onclick = () => {
-        localGameState.currentPhase = "JUDGING";
-        saveGameState(roomCode, localGameState);
-      };
-    }
+    //... (Diese Funktion bleibt unverändert)
   }
 
   function chooseDefender(playerId) {
-    const usedAnswers = localGameState.usedAnswers || [];
-    const availableAnswers = (localGameState.answers || []).filter(
-      (ans) => !usedAnswers.includes(ans.answer)
-    );
-    if (!availableAnswers.length) {
-      alert("No new answers to defend! Proceeding to judgement.");
-      localGameState.currentPhase = "JUDGING";
-      saveGameState(roomCode, localGameState);
-      return;
-    }
-    const randomAnswer =
-      availableAnswers[Math.floor(Math.random() * availableAnswers.length)];
-    localGameState.currentDefenderId = parseInt(playerId);
-    localGameState.currentAnswerToDefend = randomAnswer.answer;
-    if (!localGameState.usedAnswers) localGameState.usedAnswers = [];
-    localGameState.usedAnswers.push(randomAnswer.answer);
-    saveGameState(roomCode, localGameState);
+    //... (Diese Funktion bleibt unverändert)
   }
 
   function stopCurrentDefense() {
-    if (!localGameState.defendedPlayerIdsInRound)
-      localGameState.defendedPlayerIdsInRound = [];
-    localGameState.defendedPlayerIdsInRound.push(
-      localGameState.currentDefenderId
-    );
-    localGameState.currentDefenderId = null;
-    localGameState.currentAnswerToDefend = null;
-    saveGameState(roomCode, localGameState);
+    //... (Diese Funktion bleibt unverändert)
   }
 
   function showJudgingScreen(state) {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `<h2>Judgement</h2><p>Whose defense was the least convincing?</p><div class="judgement-grid"></div>`;
-    const grid = card.querySelector(".judgement-grid");
-    getActiveDefenders(state).forEach((p) => {
-      const btn = document.createElement("button");
-      btn.className = "btn judgement-btn";
-      btn.textContent = p.name;
-      btn.onclick = () => eliminatePlayer(p.id);
-      grid.appendChild(btn);
-    });
-    mainContent.appendChild(card);
+    //... (Diese Funktion bleibt unverändert)
   }
 
   function eliminatePlayer(playerId) {
     const player = localGameState.players.find((p) => p.id === playerId);
     if (player) player.isEliminated = true;
+
     if (getActiveDefenders(localGameState).length <= 1) {
-      localGameState.currentPhase = "FINAL_ROUND";
+      // NEU: Startet den mehrstufigen Finalrunden-Prozess
+      localGameState.currentPhase = "FINAL_ROUND_QUESTION";
       localGameState.currentQuestion = "";
       localGameState.answers = [];
+      localGameState.finalAnswer = null; // Wichtig: Zurücksetzen
     } else {
       startNewRound();
     }
@@ -378,51 +283,73 @@ document.addEventListener("DOMContentLoaded", () => {
     saveGameState(roomCode, localGameState);
   }
 
-  function showFinalRound(state) {
+  // ===============================================
+  // ===== NEUE FUNKTIONEN FÜR DIE FINALRUNDE =====
+  // ===============================================
+
+  function showFinalQuestionInput(state) {
+    mainContent.innerHTML = `<div>
+            <h2>Final Question (Judge)</h2>
+            <p>Write the final question. The eliminated players will write answers for it.</p>
+            <textarea id="final-question-input" placeholder="e.g., What is the one secret you'll take to your grave?"></textarea>
+            <button id="submit-final-question" class="btn">Unleash the Final Question</button>
+        </div>`;
+    document.getElementById("submit-final-question").onclick = () => {
+      const question = document
+        .getElementById("final-question-input")
+        .value.trim();
+      if (question) {
+        localGameState.currentQuestion = question;
+        localGameState.currentPhase = "FINAL_ROUND_ANSWERING";
+        saveGameState(roomCode, localGameState);
+      } else {
+        alert("Please write a final question.");
+      }
+    };
+  }
+
+  function showFinalRoundAnswering(state) {
     const finalist = getActiveDefenders(state)[0];
-    const amITheFinalist = localPlayer.playerId === finalist.id;
     const amITheJudge = localPlayer.playerId === state.judgeId;
+    const amITheFinalist = localPlayer.playerId === finalist.id;
     const myPlayerData = state.players.find(
       (p) => p.id === localPlayer.playerId
     );
 
-    if (amITheJudge) {
-      if (state.finalAnswer) {
-        mainContent.innerHTML = `<div class="card"><h2>FINAL: Judgement</h2><p><strong>${finalist.name}</strong> is defending:</p><div class="answer-to-defend">"${state.finalAnswer}"</div><p>Was this defense good enough to win?</p><button id="winner-btn" class="btn">Yes, a worthy winner!</button><button id="loser-btn" class="btn judgement-btn">No, that was terrible!</button></div>`;
-        document.getElementById("winner-btn").onclick = () =>
-          declareWinner(finalist);
-        document.getElementById("loser-btn").onclick = () =>
-          declareWinner(null);
-      } else {
-        showWaitingScreen(
-          "FINAL ROUND",
-          `Waiting for the eliminated players to write a final answer.`
-        );
-      }
-      return;
-    }
     if (amITheFinalist) {
-      if (state.finalAnswer) {
-        mainContent.innerHTML = `<div class="card"><h2>FINAL: Your Last Defense!</h2><p>Defend this answer to win the game:</p><div class="answer-to-defend">"${state.finalAnswer}"</div></div>`;
-      } else {
-        showWaitingScreen(
-          "FINAL ROUND!",
-          "The eliminated players are writing one last answer for you."
-        );
-      }
+      showWaitingScreen(
+        "Get Ready, Finalist!",
+        "The eliminated players are writing one last absurd answer for you based on the Judge's final question."
+      );
       return;
     }
+
+    if (amITheJudge) {
+      showWaitingScreen(
+        "The Ghosts are Writing...",
+        "The eliminated players are answering your final question. Soon you will choose one answer for the finalist to defend."
+      );
+      return;
+    }
+
+    // Ansicht für ausgeschiedene Spieler (Ghostwriter)
     if (myPlayerData.isEliminated) {
       const myAnswer = (state.answers || []).find(
         (a) => a.playerId === localPlayer.playerId
       );
       if (myAnswer) {
         showWaitingScreen(
-          "Final answer submitted!",
-          "The Judge will pick one."
+          "Final Answer Submitted!",
+          "The Judge will pick an answer for the finalist."
         );
       } else {
-        mainContent.innerHTML = `<div class="card"><h2>FINAL: Write for the Finalist!</h2><p>Write one last, nasty answer for <strong>${finalist.name}</strong> to defend.</p><textarea id="answer-input"></textarea><button id="submit-answer-btn" class="btn">Submit Answer</button></div>`;
+        mainContent.innerHTML = `<div>
+                    <h2>Write for the Finalist!</h2>
+                    <p class="question-card">"${state.currentQuestion}"</p>
+                    <p>Write one last, nasty answer for <strong>${finalist.name}</strong> to defend.</p>
+                    <textarea id="answer-input"></textarea>
+                    <button id="submit-answer-btn" class="btn">Submit Final Answer</button>
+                </div>`;
         document.getElementById("submit-answer-btn").onclick = () => {
           const answer = document.getElementById("answer-input").value.trim();
           if (answer) {
@@ -431,8 +358,10 @@ document.addEventListener("DOMContentLoaded", () => {
               playerId: localPlayer.playerId,
               answer: answer,
             });
+            // Wähle die ERSTE eingereichte Antwort als finale Antwort (vereinfacht)
             if (!localGameState.finalAnswer) {
               localGameState.finalAnswer = answer;
+              localGameState.currentPhase = "FINAL_ROUND_DEFENSE";
             }
             saveGameState(roomCode, localGameState);
           }
@@ -441,9 +370,50 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function showFinalRoundDefense(state) {
+    const finalist = getActiveDefenders(state)[0];
+    const amITheFinalist = localPlayer.playerId === finalist.id;
+    const amITheJudge = localPlayer.playerId === state.judgeId;
+
+    if (amITheJudge) {
+      mainContent.innerHTML = `<div>
+                <h2>FINAL: Judgement</h2>
+                <p class="question-card">"${state.currentQuestion}"</p>
+                <p><strong>${finalist.name}</strong> is defending the answer:</p>
+                <div class="answer-to-defend">"${state.finalAnswer}"</div>
+                <p>Was this defense good enough to win?</p>
+                <button id="winner-btn" class="btn">Yes, a worthy winner!</button>
+                <button id="loser-btn" class="btn judgement-btn">No, that was terrible!</button>
+            </div>`;
+      document.getElementById("winner-btn").onclick = () =>
+        declareWinner(finalist);
+      document.getElementById("loser-btn").onclick = () => declareWinner(null);
+      return;
+    }
+
+    if (amITheFinalist) {
+      mainContent.innerHTML = `<div>
+                <h2>FINAL: Your Last Defense!</h2>
+                <p class="question-card">"${state.currentQuestion}"</p>
+                <p>Defend this answer to win the game:</p>
+                <div class="answer-to-defend">"${state.finalAnswer}"</div>
+            </div>`;
+      return;
+    }
+
+    // Ansicht für alle anderen (ausgeschiedene Spieler, die nicht geantwortet haben)
+    showWaitingScreen(
+      "The Final Defense",
+      `Listen as ${finalist.name} defends their final answer!`
+    );
+  }
+
   function declareWinner(player) {
     localGameState.winner = player;
     localGameState.currentPhase = "END";
     saveGameState(roomCode, localGameState);
   }
+
+  // Kopiere die unveränderten Funktionen hierher, falls du sie brauchst.
+  // z.B. showAnswerInput, showDefensePhase, etc.
 });

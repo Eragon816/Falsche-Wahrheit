@@ -13,66 +13,103 @@
   <body>
     <div id="app-container">
       <div class="screen">
-        <div class="card">
+        <!-- Schritt 1: Hauptmenü -->
+        <div id="initial-choice" class="menu-step">
           <h1>False Truth</h1>
-          <div class="start-option">
-            <h2>Start a New Game</h2>
-            <p>Create a new game room and invite your friends.</p>
-            <button id="host-game-btn" class="btn">Host Game</button>
+          <p>Host a new game or join an existing one.</p>
+          <button id="show-host-btn" class="btn">Host Game</button>
+          <button id="show-join-btn" class="btn secondary">Join Game</button>
+        </div>
+
+        <!-- Schritt 2: Host-Optionen -->
+        <div id="host-options" class="menu-step" style="display: none">
+          <h2>Choose Game Mode</h2>
+          <div class="mode-selection-container">
+            <button id="host-classic-btn" class="btn">Classic Mode</button>
+            <button id="host-custom-btn" class="btn">Custom Question</button>
           </div>
-          <div style="height: 2px; background: #555; margin: 40px 0"></div>
-          <div class="start-option">
-            <h2>Join a Game</h2>
-            <p>Enter the room code you received from a friend.</p>
-            <input
-              type="text"
-              id="room-code-input"
-              placeholder="Enter Room Code"
-              maxlength="4"
-              style="text-transform: uppercase"
-            />
-            <button id="join-room-btn" class="btn secondary">Join</button>
-          </div>
+          <button class="back-btn">Back</button>
+        </div>
+
+        <!-- Schritt 2: Join-Optionen -->
+        <div id="join-options" class="menu-step" style="display: none">
+          <h2>Join a Game</h2>
+          <p>Enter the 4-character room code.</p>
+          <input
+            type="text"
+            id="room-code-input"
+            placeholder="ROOM CODE"
+            maxlength="4"
+            style="
+              text-transform: uppercase;
+              text-align: center;
+              font-family: var(--font-header);
+              letter-spacing: 8px;
+              font-size: 2rem;
+            "
+          />
+          <button id="join-room-btn" class="btn secondary">Join Room</button>
+          <button class="back-btn">Back</button>
         </div>
       </div>
     </div>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        const hostGameBtn = document.getElementById("host-game-btn");
-        const joinRoomBtn = document.getElementById("join-room-btn");
-        const roomCodeInput = document.getElementById("room-code-input");
-        hostGameBtn.addEventListener("click", () => {
+        const initialChoice = document.getElementById("initial-choice");
+        const hostOptions = document.getElementById("host-options");
+        const joinOptions = document.getElementById("join-options");
+
+        function showStep(stepToShow) {
+          [initialChoice, hostOptions, joinOptions].forEach(
+            (step) => (step.style.display = "none")
+          );
+          stepToShow.style.display = "block";
+        }
+
+        document.getElementById("show-host-btn").onclick = () =>
+          showStep(hostOptions);
+        document.getElementById("show-join-btn").onclick = () =>
+          showStep(joinOptions);
+        document
+          .querySelectorAll(".back-btn")
+          .forEach((btn) => (btn.onclick = () => showStep(initialChoice)));
+
+        function createGame(mode) {
           const roomCode = generateRoomCode();
+          const initialState = {
+            roomCode: roomCode,
+            gameMode: mode, // Speichert den Spielmodus
+            players: [],
+            hostId: null,
+            currentPhase: "LOBBY",
+          };
+          saveGameState(roomCode, initialState);
           window.location.href = `lobby.html?room=${roomCode}`;
-        });
+        }
+
+        document.getElementById("host-classic-btn").onclick = () =>
+          createGame("classic");
+        document.getElementById("host-custom-btn").onclick = () =>
+          createGame("custom");
+
         function joinRoom() {
+          const roomCodeInput = document.getElementById("room-code-input");
           const roomCode = roomCodeInput.value.trim().toUpperCase();
           if (roomCode.length !== 4) {
-            alert("Please enter a valid 4-character room code.");
+            alert("Please enter a valid 4-character code.");
             return;
           }
-          const gameRef = getGameRef(roomCode);
-          gameRef
+          getGameRef(roomCode)
             .get()
             .then((snapshot) => {
               if (snapshot.exists()) {
                 window.location.href = `lobby.html?room=${roomCode}`;
               } else {
                 alert(`Error: Room "${roomCode}" not found.`);
-                roomCodeInput.value = "";
               }
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-              alert("A connection error occurred. Please try again.");
             });
         }
-        joinRoomBtn.addEventListener("click", joinRoom);
-        roomCodeInput.addEventListener("keyup", (e) => {
-          if (e.key === "Enter") {
-            joinRoom();
-          }
-        });
+        document.getElementById("join-room-btn").onclick = joinRoom;
       });
     </script>
   </body>

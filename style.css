@@ -1,22 +1,22 @@
 /* =============================================== */
-/* ===== HOLOGRAPHIC UI - GRUNDLAGEN & VARIABLEN ===== */
+/* ===== "CELESTIAL INDIGO" V2 - GRUNDLAGEN ===== */
 /* =============================================== */
 :root {
-  --primary-color: #6c6ae7;
-  --secondary-color: #f9a826;
-  --background-color: #12121c; /* Noch dunkler für mehr Kontrast */
-  --danger-color: #e74c3c;
-  --text-color: #c1c1e1; /* Heller für bessere Lesbarkeit */
-  --text-color-bright: #ffffff;
-  --font-ui: "Nunito", sans-serif;
+  --primary-color: #4f46e5;
+  --secondary-color: #ca8a04;
+  --danger-color: #ef4444;
+  --background-start: #0f172a;
+  --background-end: #0c0c14;
+  --component-bg: rgba(15, 23, 42, 0.7);
+  --text-color: #94a3b8;
+  --text-color-bright: #f1f5f9;
+  --font-ui: "Montserrat", sans-serif;
   --font-header: "Bangers", cursive;
-  --main-transition: 0.3s ease;
-  --shadow-color: rgba(0, 0, 0, 0.5);
-  --neon-shadow-primary: 0 0 8px var(--primary-color),
-    0 0 16px var(--primary-color);
+  --main-transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --aurora-gradient: linear-gradient(90deg, var(--primary-color), #7c3aed);
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bangers&family=Montserrat:wght@400;600;700&display=swap");
 
 * {
   box-sizing: border-box;
@@ -35,7 +35,7 @@ body {
 
 body {
   font-family: var(--font-ui);
-  background: var(--background-color);
+  background: var(--background-start);
   color: var(--text-color);
 }
 
@@ -45,35 +45,39 @@ body {
 #app-container {
   width: 100%;
   height: 100%;
-  background: radial-gradient(ellipse at bottom, #1a1a2e 0%, #12121c 100%);
+  background: radial-gradient(
+    ellipse at bottom,
+    var(--background-end) 0%,
+    var(--background-start) 100%
+  );
   position: relative;
   z-index: 1;
 }
-
-#app-container::before {
-  content: "";
+@keyframes move-stars {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-1000px);
+  }
+}
+.stars {
   position: absolute;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  height: 100%;
-  background-image: linear-gradient(
-      rgba(108, 106, 231, 0.07) 1px,
-      transparent 1px
-    ),
-    linear-gradient(90deg, rgba(108, 106, 231, 0.07) 1px, transparent 1px);
-  background-size: 40px 40px;
-  animation: pan-background 40s linear infinite;
+  height: 200%;
+  display: block;
   z-index: -1;
-  opacity: 0.5;
 }
-@keyframes pan-background {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: -40px -40px;
-  }
+.stars {
+  background: transparent
+    url(https://www.transparenttextures.com/patterns/stardust.png) repeat top
+    center;
+  animation: move-stars 150s linear infinite;
+  opacity: 0.5;
 }
 
 .screen {
@@ -88,29 +92,40 @@ body {
   overflow-y: auto;
 }
 
-/* Wir stylen nicht mehr die .card, sondern den direkten Inhalt des Screens */
 .screen > h1,
 .screen > h2,
 .screen > p,
-.screen > .start-option,
+.screen > .menu-step,
 #main-content > div {
-  animation: fadeIn 0.5s var(--main-transition) backwards;
+  animation: fadeIn 0.8s var(--main-transition) backwards;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* =============================================== */
-/* ===== KREATIVE KOMPONENTEN ===== */
+/* ===== TYPOGRAFIE & KERN-KOMPONENTEN ===== */
 /* =============================================== */
-h1 {
-  font-family: var(--font-header);
-  font-size: clamp(3rem, 12vw, 4.5rem);
-  color: var(--text-color-bright);
-  text-shadow: var(--neon-shadow-primary);
-}
+h1,
 h2 {
   font-family: var(--font-header);
-  font-size: clamp(2.2rem, 9vw, 3.2rem);
+  letter-spacing: 4px;
   color: var(--text-color-bright);
-  text-shadow: var(--neon-shadow-primary);
+  text-shadow: 0 0 15px var(--primary-color);
+}
+h1 {
+  font-size: clamp(3.5rem, 12vw, 5rem);
+}
+h2 {
+  font-size: clamp(2.5rem, 9vw, 3.5rem);
+  margin-bottom: 15px;
 }
 p {
   line-height: 1.7;
@@ -119,33 +134,34 @@ p {
   max-width: 450px;
 }
 
+/* VERBESSERTES, GRÖSSERES TEXTFELD-DESIGN */
 input[type="text"],
 textarea {
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid var(--primary-color);
-  border-radius: 0;
-  padding: 15px 5px;
-  font-size: 1.1rem;
+  background: var(--component-bg);
+  border: 1px solid rgba(79, 70, 229, 0.5);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border-radius: 12px;
+  padding: 18px 20px; /* Mehr Padding */
+  font-size: 1.2rem; /* Größere Schrift */
+  font-weight: 600;
   color: var(--text-color-bright);
   transition: all var(--main-transition);
   width: 100%;
   margin-bottom: 15px;
+  text-align: center; /* Text zentrieren */
 }
 input[type="text"]:focus,
 textarea:focus {
   outline: none;
-  border-image: linear-gradient(
-      to right,
-      var(--secondary-color),
-      var(--primary-color)
-    )
-    1;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 20px rgba(79, 70, 229, 0.6);
 }
+/* Spezifisch für die arabische Antwort-Textbox */
 textarea {
   text-align: right;
   direction: rtl;
-  min-height: 120px;
+  min-height: 140px;
   resize: vertical;
 }
 
@@ -155,78 +171,84 @@ textarea {
   font-size: 1.1rem;
   padding: 16px 30px;
   border-radius: 12px;
-  border: 2px solid transparent;
-  background-color: var(--primary-color);
+  border: none;
+  background: var(--aurora-gradient);
   color: var(--text-color-bright);
   cursor: pointer;
   transition: all var(--main-transition);
-  box-shadow: 0 5px 20px rgba(108, 106, 231, 0.3);
+  box-shadow: 0 5px 20px rgba(79, 70, 229, 0.3);
   width: 100%;
   max-width: 350px;
   margin-top: 10px;
 }
 .btn:hover:not(:disabled) {
   transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(108, 106, 231, 0.5);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.5);
 }
 .btn:disabled {
-  background: #333;
-  color: #777;
+  background: #334155;
+  color: #64748b;
   box-shadow: none;
   cursor: not-allowed;
 }
 .btn.secondary {
-  background: var(--secondary-color);
-  box-shadow: 0 5px 20px rgba(249, 168, 38, 0.3);
+  background: linear-gradient(90deg, var(--secondary-color), #eab308);
+  box-shadow: 0 5px 20px rgba(202, 138, 4, 0.3);
 }
 .btn.secondary:hover:not(:disabled) {
-  box-shadow: 0 10px 25px rgba(249, 168, 38, 0.5);
+  box-shadow: 0 10px 25px rgba(202, 138, 4, 0.5);
+}
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 30px;
+  padding: 10px;
+  transition: all var(--main-transition);
+}
+.back-btn:hover {
+  color: var(--text-color-bright);
+  transform: translateX(-5px);
+}
+.back-btn::before {
+  content: "‹ ";
 }
 
 /* =============================================== */
 /* ===== SEITENSPEZIFISCHE STYLES (MOBILE-FIRST) ===== */
 /* =============================================== */
-.start-option {
-  margin-bottom: 30px;
-}
-#room-code-input {
-  font-family: var(--font-header);
-  letter-spacing: 8px;
-  font-size: 2rem;
-  border-bottom-width: 3px;
-  text-align: center;
-}
-#lobby-player-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-  width: 100%;
-  margin-top: 25px;
-}
+
 .lobby-player {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
-  max-width: 320px;
-  background: var(--card-bg-color);
-  border: 1px solid var(--primary-color);
+  max-width: 350px;
+  background: var(--component-bg);
+  border: 1px solid rgba(79, 70, 229, 0.5);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   padding: 12px 20px;
-  border-radius: 50px;
+  border-radius: 12px;
   font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+.lobby-player span:first-child {
+  flex-grow: 1;
+  text-align: left;
 }
 .kick-btn {
   background: var(--danger-color);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  font-size: 14px;
-  line-height: 24px;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  line-height: 28px;
   padding: 0;
-  margin-left: 10px;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -241,7 +263,6 @@ textarea {
   height: 100%;
   width: 100%;
   padding: 0;
-  justify-content: flex-start;
 }
 #game-header {
   text-align: center;
@@ -263,14 +284,13 @@ textarea {
   justify-content: flex-start;
   overflow-x: auto;
   padding: 5px 15px 10px 15px;
-  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 #game-player-list::-webkit-scrollbar {
   display: none;
 }
 .player-item {
-  background: var(--card-bg-color);
+  background: var(--component-bg);
   border: 2px solid rgba(255, 255, 255, 0.1);
   padding: 8px 18px;
   border-radius: 50px;
@@ -280,27 +300,46 @@ textarea {
   font-size: 0.9rem;
   font-weight: 600;
 }
+@keyframes pulse-secondary {
+  0%,
+  100% {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 8px var(--secondary-color);
+  }
+  50% {
+    border-color: #f59e0b;
+    box-shadow: 0 0 16px #f59e0b;
+  }
+}
+@keyframes pulse-primary {
+  0%,
+  100% {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 8px var(--primary-color);
+  }
+  50% {
+    border-color: #818cf8;
+    box-shadow: 0 0 16px #818cf8;
+  }
+}
 .player-item.judge {
-  border-color: var(--secondary-color);
+  animation: pulse-secondary 2s infinite;
   color: var(--secondary-color);
-  text-shadow: 0 0 8px var(--secondary-color);
 }
 .player-item.defending {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
+  animation: pulse-primary 1.5s infinite;
   transform: scale(1.05);
-  text-shadow: 0 0 8px var(--primary-color);
 }
 .player-item.is-eliminating {
   animation: playerEliminated 0.6s forwards ease-in-out;
 }
 @keyframes playerEliminated {
   from {
-    transform: scale(1) rotate(0);
+    transform: scale(1);
     opacity: 1;
   }
   to {
-    transform: scale(0) rotate(360deg);
+    transform: scale(0);
     opacity: 0;
   }
 }
@@ -312,73 +351,71 @@ textarea {
   justify-content: center;
   width: 100%;
   min-height: 0;
-  padding: 0 15px 15px 15px;
+  padding: 0 0 15px 0;
 }
-/* Entferne die .card-Abhängigkeit */
 #main-content > div {
   width: 100%;
   max-width: 450px;
   max-height: 100%;
-  overflow-y: auto; /* Scrollen nur im Inhalt, wenn nötig */
+  overflow-y: auto;
   padding: 10px;
 }
 .question-card,
 .answer-to-defend {
   direction: rtl;
   text-align: right;
-  background: linear-gradient(135deg, var(--primary-color), #4e4dc8);
-  color: var(--text-color-bright);
+  background: transparent;
+  border: 2px solid;
+  border-image-slice: 1;
+  border-image-source: var(--aurora-gradient);
   padding: 20px;
   border-radius: 15px;
   font-size: 1.2rem;
   font-weight: 600;
-  box-shadow: 0 6px 20px rgba(108, 106, 231, 0.4);
   width: 100%;
   margin-bottom: 20px;
 }
 .answer-to-defend {
-  background: linear-gradient(135deg, var(--secondary-color), #d88e1a);
-  box-shadow: 0 6px 20px rgba(249, 168, 38, 0.4);
+  border-image-source: linear-gradient(90deg, var(--secondary-color), #f59e0b);
 }
+
 .question-selection-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 15px;
-  width: 100%;
 }
 .question-btn {
   direction: rtl;
   text-align: right;
-  background: var(--card-bg-color);
-  border: 1px solid var(--secondary-color);
-  color: var(--text-color);
-  font-size: 1rem;
-  padding: 18px;
+  background: var(--component-bg);
+  border: 1px solid rgba(202, 138, 4, 0.5);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  font-size: 1.1rem;
+  padding: 20px;
   border-radius: 12px;
   transition: all var(--main-transition);
+  color: var(--text-color);
 }
 .question-btn:hover {
-  background: var(--secondary-color);
-  color: #12121c;
-  transform: scale(1.03);
+  transform: scale(1.03) translateY(-3px);
+  border-color: var(--secondary-color);
+  color: var(--text-color-bright);
+  box-shadow: 0 0 20px rgba(202, 138, 4, 0.6);
 }
+
 .judgement-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
 }
-.judgement-grid .btn {
-  flex-grow: 1;
-  max-width: 150px;
-  font-size: 1rem;
-}
 .judgement-btn {
   background: var(--danger-color);
-  box-shadow: 0 5px 20px rgba(231, 76, 60, 0.3);
+  box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
 }
 .judgement-btn:hover:not(:disabled) {
-  box-shadow: 0 10px 25px rgba(231, 76, 60, 0.5);
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.5);
 }
 
 /* =============================================== */
@@ -388,23 +425,22 @@ textarea {
   p {
     font-size: 1.1rem;
   }
-  .btn {
-    font-size: 1.2rem;
+  h1 {
+    font-size: 5rem;
   }
-
-  /* --- Spiel-Layout (ZENTRIERTES DESKTOP-LAYOUT) --- */
+  h2 {
+    font-size: 4rem;
+  }
   #game-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* ALLES ZENTRIEREN */
+    align-items: center;
     justify-content: center;
     gap: 25px;
-    padding: 20px;
   }
-  #player-sidebar {
-    order: 0;
+  #game-header,
+  #player-sidebar,
+  #main-content {
     width: 100%;
-    max-width: 800px;
+    max-width: 900px;
   }
   #player-sidebar h4 {
     display: block;
@@ -413,23 +449,9 @@ textarea {
     font-size: 1.5rem;
   }
   #game-player-list {
-    display: grid;
-    grid-template-columns: repeat(
-      auto-fit,
-      minmax(180px, 1fr)
-    ); /* Intelligentes Grid */
-    gap: 12px;
-    justify-content: center;
-    width: 100%;
-  }
-  .player-item {
-    width: auto;
-    font-size: 1rem;
     justify-content: center;
   }
-  #main-content {
-    flex-grow: 0; /* Nicht mehr wachsen lassen */
-    width: 100%;
+  #main-content > div {
     max-width: 700px;
   }
   .question-selection-grid {
