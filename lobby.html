@@ -13,32 +13,34 @@
   </head>
   <body>
     <div id="app-container">
+      <div class="stars"></div>
       <div class="screen">
-        <div class="card">
-          <h2 id="lobby-title">Lobby</h2>
-          <p>
-            Share the room code (at the top) or the link with your friends! A
-            minimum of 4 players is required.
-          </p>
-          <div id="join-form" style="margin-bottom: 20px">
-            <input
-              type="text"
-              id="player-name-input"
-              placeholder="Your Name"
-              maxlength="15"
-            />
-            <button id="join-btn" class="btn secondary">Join</button>
-          </div>
-          <div id="lobby-player-list"></div>
-          <button
-            id="start-game-btn"
-            class="btn"
-            disabled
-            style="display: none"
-          >
-            Start Game
-          </button>
+        <h2 id="lobby-title">Lobby</h2>
+        <p>
+          Share the room code or link with your friends! Minimum 4 players
+          required.
+        </p>
+
+        <div id="join-form" style="width: 100%; max-width: 350px">
+          <input
+            type="text"
+            id="player-name-input"
+            placeholder="Your Name"
+            maxlength="15"
+          />
+          <button id="join-btn" class="btn secondary">Join</button>
         </div>
+
+        <div id="lobby-player-list">
+          <!-- Player list will be dynamically inserted here -->
+        </div>
+
+        <!-- Ready button will be dynamically inserted here for non-host players -->
+        <div id="ready-container"></div>
+
+        <button id="start-game-btn" class="btn" disabled style="display: none">
+          Start Game
+        </button>
       </div>
     </div>
   </body>

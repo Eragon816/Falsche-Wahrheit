@@ -5,6 +5,7 @@
   --primary-color: #4f46e5;
   --secondary-color: #ca8a04;
   --danger-color: #ef4444;
+  --success-color: #10b981; /* NEU: Für "Ready"-Status */
   --background-start: #0f172a;
   --background-end: #0c0c14;
   --component-bg: rgba(15, 23, 42, 0.7);
@@ -23,16 +24,12 @@
   margin: 0;
   padding: 0;
 }
-
 html,
 body {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
-
 body {
   font-family: var(--font-ui);
   background: var(--background-start);
@@ -71,15 +68,12 @@ body {
   height: 200%;
   display: block;
   z-index: -1;
-}
-.stars {
   background: transparent
     url(https://www.transparenttextures.com/patterns/stardust.png) repeat top
     center;
   animation: move-stars 150s linear infinite;
   opacity: 0.5;
 }
-
 .screen {
   display: flex;
   flex-direction: column;
@@ -91,7 +85,6 @@ body {
   text-align: center;
   overflow-y: auto;
 }
-
 .screen > h1,
 .screen > h2,
 .screen > p,
@@ -133,8 +126,6 @@ p {
   font-size: 1rem;
   max-width: 450px;
 }
-
-/* VERBESSERTES, GRÖSSERES TEXTFELD-DESIGN */
 input[type="text"],
 textarea {
   background: var(--component-bg);
@@ -142,14 +133,14 @@ textarea {
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   border-radius: 12px;
-  padding: 18px 20px; /* Mehr Padding */
-  font-size: 1.2rem; /* Größere Schrift */
+  padding: 18px 20px;
+  font-size: 1.2rem;
   font-weight: 600;
   color: var(--text-color-bright);
   transition: all var(--main-transition);
   width: 100%;
   margin-bottom: 15px;
-  text-align: center; /* Text zentrieren */
+  text-align: center;
 }
 input[type="text"]:focus,
 textarea:focus {
@@ -157,7 +148,6 @@ textarea:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 20px rgba(79, 70, 229, 0.6);
 }
-/* Spezifisch für die arabische Antwort-Textbox */
 textarea {
   text-align: right;
   direction: rtl;
@@ -218,9 +208,16 @@ textarea {
 }
 
 /* =============================================== */
-/* ===== SEITENSPEZIFISCHE STYLES (MOBILE-FIRST) ===== */
+/* ===== LOBBY & READY-SYSTEM ===== */
 /* =============================================== */
-
+#lobby-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  margin: 25px 0;
+}
 .lobby-player {
   display: flex;
   align-items: center;
@@ -228,12 +225,11 @@ textarea {
   max-width: 350px;
   background: var(--component-bg);
   border: 1px solid rgba(79, 70, 229, 0.5);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
   padding: 12px 20px;
   border-radius: 12px;
   font-weight: 600;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all var(--main-transition);
 }
 .lobby-player span:first-child {
   flex-grow: 1;
@@ -257,12 +253,42 @@ textarea {
   transform: scale(1.2);
 }
 
-#game-screen {
+/* NEUE READY-STILE */
+.lobby-player.ready {
+  border-color: var(--success-color);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+}
+.lobby-player.not-ready {
+  border-color: var(--danger-color);
+}
+.ready-status-icon {
+  font-size: 1.5rem;
+  margin-right: 15px;
+}
+
+#ready-container {
+  width: 100%;
+  max-width: 350px;
+  margin-top: 20px;
+}
+.ready-btn {
+  background: var(--danger-color);
+  box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+}
+.ready-btn.is-ready {
+  background: var(--success-color);
+  box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
+}
+
+/* =============================================== */
+/* ===== SPIEL-LAYOUT (MOBILE-FIRST) ===== */
+/* =============================================== */
+#game-screen,
+#main-content > div {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
-  padding: 0;
 }
 #game-header {
   text-align: center;
@@ -343,18 +369,15 @@ textarea {
     opacity: 0;
   }
 }
-
 #main-content {
   flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   min-height: 0;
   padding: 0 0 15px 0;
 }
 #main-content > div {
-  width: 100%;
   max-width: 450px;
   max-height: 100%;
   overflow-y: auto;
@@ -372,13 +395,11 @@ textarea {
   border-radius: 15px;
   font-size: 1.2rem;
   font-weight: 600;
-  width: 100%;
   margin-bottom: 20px;
 }
 .answer-to-defend {
   border-image-source: linear-gradient(90deg, var(--secondary-color), #f59e0b);
 }
-
 .question-selection-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -403,7 +424,6 @@ textarea {
   color: var(--text-color-bright);
   box-shadow: 0 0 20px rgba(202, 138, 4, 0.6);
 }
-
 .judgement-grid {
   display: flex;
   flex-wrap: wrap;
@@ -413,9 +433,6 @@ textarea {
 .judgement-btn {
   background: var(--danger-color);
   box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
-}
-.judgement-btn:hover:not(:disabled) {
-  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.5);
 }
 
 /* =============================================== */

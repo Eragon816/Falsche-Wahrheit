@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const joinForm = document.getElementById("join-form");
   const playerNameInput = document.getElementById("player-name-input");
   const joinBtn = document.getElementById("join-btn");
+  const readyContainer = document.getElementById("ready-container");
 
   const LOCAL_PLAYER_KEY = "falscheWahrheitPlayer";
   function setLocalPlayerIdentity(player) {
@@ -24,24 +25,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const gameRef = getGameRef(roomCode);
   lobbyTitle.textContent = `Lobby (${roomCode})`;
-
   let localGameState = null;
 
   gameRef.on("value", (snapshot) => {
     const gameStateFromFirebase = snapshot.val();
 
     if (!gameStateFromFirebase) {
-      // Dies ist der erste Besuch in diesem Raum (nur der Host macht das).
-      // Hole den Modus, den der Host auf der Startseite ausgewählt hat.
-      const gameMode = sessionStorage.getItem("pendingGameMode") || "classic"; // Standardmäßig 'classic' als Fallback
-      sessionStorage.removeItem("pendingGameMode"); // Wichtig: Aufräumen, damit es nicht wiederverwendet wird
-
-      console.log(
-        `Room ${roomCode} does not exist. Initializing with mode: ${gameMode}`
-      );
+      const gameMode = sessionStorage.getItem("pendingGameMode") || "classic";
+      sessionStorage.removeItem("pendingGameMode");
       const initialState = {
         roomCode: roomCode,
-        gameMode: gameMode, // Spielmodus von Anfang an speichern
+        gameMode: gameMode,
         players: [],
         hostId: null,
         currentPhase: "LOBBY",
@@ -51,14 +45,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     localGameState = gameStateFromFirebase;
-
-    // Sicherheits-Fallback, falls ein altes Spiel ohne Modus existiert
     if (!localGameState.gameMode) {
       localGameState.gameMode = "classic";
     }
-
-    console.log("Game state received:", localGameState);
-
     if (localGameState.currentPhase !== "LOBBY") {
       window.location.href = `game.html?room=${roomCode}`;
       return;
@@ -69,28 +58,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateLobbyView(state) {
     const localPlayer = getLocalPlayerIdentity();
-    if (
+    const amITheHost = localPlayer && localPlayer.playerId === state.hostId;
+    const hasJoined =
       localPlayer &&
       localPlayer.roomCode === roomCode &&
-      state.players.some((p) => p.id === localPlayer.playerId)
-    ) {
-      joinForm.innerHTML = `<p>You have joined as <strong>${localPlayer.playerName}</strong>. Waiting for the game to start...</p>`;
-      joinForm.style.marginBottom = "20px";
+      state.players.some((p) => p.id === localPlayer.playerId);
+
+    if (hasJoined) {
+      joinForm.style.display = "none";
     }
 
+    // Render player list
     lobbyPlayerList.innerHTML = "";
-    const amITheHost = localPlayer && localPlayer.playerId === state.hostId;
-
     if (state.players) {
       state.players.forEach((player) => {
         const playerEl = document.createElement("div");
         playerEl.className = "lobby-player";
 
-        let playerText = `<span>${player.name}</span>`;
-        if (player.id === state.hostId) {
-          playerText += ' <span class="host-crown">👑</span>';
+        // Add ready/not-ready classes for visual feedback
+        if (player.isReady) {
+          playerEl.classList.add("ready");
+        } else if (player.id !== state.hostId) {
+          playerEl.classList.add("not-ready");
         }
 
+        let playerText = `<span class="ready-status-icon">${
+          player.isReady ? "✅" : "❌"
+        }</span><span>${player.name}</span>`;
+        if (player.id === state.hostId) {
+          // Host is always "ready" and has a crown
+          playerText = `<span class="ready-status-icon">👑</span><span>${player.name}</span>`;
+        }
         if (amITheHost && player.id !== localPlayer.playerId) {
           playerText += `<button class="kick-btn" data-kick-id="${player.id}">×</button>`;
         }
@@ -99,16 +97,37 @@ document.addEventListener("DOMContentLoaded", () => {
         lobbyPlayerList.appendChild(playerEl);
       });
     }
-
     addKickListeners();
 
+    // Render ready button for non-host players who have joined
+    if (hasJoined && !amITheHost) {
+      const myPlayerData = state.players.find(
+        (p) => p.id === localPlayer.playerId
+      );
+      readyContainer.innerHTML = `<button id="ready-btn" class="btn ready-btn ${
+        myPlayerData.isReady ? "is-ready" : ""
+      }">${myPlayerData.isReady ? "I am NOT Ready" : "I am READY!"}</button>`;
+      document.getElementById("ready-btn").onclick = toggleReadyState;
+    } else {
+      readyContainer.innerHTML = "";
+    }
+
+    // Logic for the host's start button
     const enoughPlayers = state.players && state.players.length >= 4;
+    const allPlayersReady = state.players
+      .filter((p) => p.id !== state.hostId)
+      .every((p) => p.isReady);
+
     if (amITheHost) {
       startGameBtn.style.display = "block";
-      startGameBtn.disabled = !enoughPlayers;
-      startGameBtn.title = enoughPlayers
-        ? ""
-        : "At least 4 players are required.";
+      startGameBtn.disabled = !enoughPlayers || !allPlayersReady;
+      if (!enoughPlayers) {
+        startGameBtn.title = "At least 4 players are required.";
+      } else if (!allPlayersReady) {
+        startGameBtn.title = "Waiting for all players to be ready...";
+      } else {
+        startGameBtn.title = "Everyone is ready! Let's go!";
+      }
     } else {
       startGameBtn.style.display = "none";
     }
@@ -121,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     if (!localGameState) {
-      alert("Connecting to the server, please try again in a moment.");
+      alert("Connecting to the server, please try again.");
       return;
     }
     if (
@@ -130,14 +149,17 @@ document.addEventListener("DOMContentLoaded", () => {
         (p) => p.name.toLowerCase() === name.toLowerCase()
       )
     ) {
-      alert(`The name "${name}" is already taken. Please choose another one.`);
+      alert(`The name "${name}" is already taken.`);
       return;
     }
+
+    // New players join as "not ready"
     const newPlayer = {
       id: Date.now(),
       name: name,
       isJudge: false,
       isEliminated: false,
+      isReady: false,
     };
     if (!localGameState.players) localGameState.players = [];
     localGameState.players.push(newPlayer);
@@ -153,10 +175,24 @@ document.addEventListener("DOMContentLoaded", () => {
     saveGameState(roomCode, localGameState);
   }
 
+  function toggleReadyState() {
+    const localPlayer = getLocalPlayerIdentity();
+    if (!localPlayer || !localGameState) return;
+
+    const myPlayerIndex = localGameState.players.findIndex(
+      (p) => p.id === localPlayer.playerId
+    );
+    if (myPlayerIndex > -1) {
+      // Toggle the 'isReady' status
+      localGameState.players[myPlayerIndex].isReady =
+        !localGameState.players[myPlayerIndex].isReady;
+      saveGameState(roomCode, localGameState);
+    }
+  }
+
   function startGame() {
     const localPlayer = getLocalPlayerIdentity();
     if (!localPlayer || localPlayer.playerId !== localGameState.hostId) {
-      console.warn("Only the host can start the game!");
       return;
     }
 
@@ -164,11 +200,15 @@ document.addEventListener("DOMContentLoaded", () => {
       Math.random() * localGameState.players.length
     );
     localGameState.judgeId = localGameState.players[judgeIndex].id;
-    localGameState.players[judgeIndex].isJudge = true;
+    // The judge is not a participant, so they don't need a ready status in-game
+    localGameState.players.forEach(
+      (p) => (p.isJudge = p.id === localGameState.judgeId)
+    );
 
     localGameState.currentRound = 1;
     localGameState.currentPhase = "QUESTION_SELECTION";
 
+    // Reset round-specific data
     localGameState.currentQuestion = "";
     localGameState.answers = [];
     localGameState.usedAnswers = [];
