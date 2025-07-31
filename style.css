@@ -74,6 +74,18 @@ body {
   animation: move-stars 150s linear infinite;
   opacity: 0.5;
 }
+
+/* NEU: Canvas für Effekte */
+#effects-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Wichtig: Lässt Klicks "durchfallen" */
+  z-index: 2;
+}
+
 .screen {
   display: flex;
   flex-direction: column;
@@ -84,6 +96,8 @@ body {
   padding: 20px 15px;
   text-align: center;
   overflow-y: auto;
+  position: relative; /* Wichtig: Stellt sicher, dass der z-index greift */
+  z-index: 3;
 }
 .screen > h1,
 .screen > h2,
@@ -449,15 +463,21 @@ textarea {
     font-size: 4rem;
   }
   #game-screen {
-    align-items: center;
-    justify-content: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: center;
     gap: 25px;
   }
   #game-header,
-  #player-sidebar,
   #main-content {
-    width: 100%;
-    max-width: 900px;
+    max-width: 700px;
+  }
+  #player-sidebar {
+    order: 0;
+    width: 150px;
+    flex-shrink: 0;
+    align-self: flex-start;
+    padding-bottom: 0;
   }
   #player-sidebar h4 {
     display: block;
@@ -466,7 +486,11 @@ textarea {
     font-size: 1.5rem;
   }
   #game-player-list {
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-x: hidden;
+    padding: 0;
   }
   #main-content > div {
     max-width: 700px;

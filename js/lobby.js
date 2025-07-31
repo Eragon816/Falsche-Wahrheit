@@ -200,15 +200,12 @@ document.addEventListener("DOMContentLoaded", () => {
       Math.random() * localGameState.players.length
     );
     localGameState.judgeId = localGameState.players[judgeIndex].id;
-    // The judge is not a participant, so they don't need a ready status in-game
     localGameState.players.forEach(
       (p) => (p.isJudge = p.id === localGameState.judgeId)
     );
 
     localGameState.currentRound = 1;
     localGameState.currentPhase = "QUESTION_SELECTION";
-
-    // Reset round-specific data
     localGameState.currentQuestion = "";
     localGameState.answers = [];
     localGameState.usedAnswers = [];

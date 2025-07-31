@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "ليش تركت انت والإكس تبعك؟",
     "انا بذكرك بمين؟",
     "اكتب بيت شعر من تأليفك يوصفني.",
+    "حاجة مجنونة عملتها عشان توصل للي بتحبها؟ ",
     "لو نحن متخانقين، كيف رح تصالحني؟",
     "لما تروح تتقدم للبنت الي بتحبها، شو رح تاخذ معك؟",
     "مامتك ايش حكت لما شافت صورتي؟",
@@ -446,7 +447,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const finalAnswers = state.answers || [];
 
       if (finalAnswers.length >= eliminatedPlayers.length) {
-        // Alle haben geantwortet, zeige die Auswahl
         let html = `<h2>Final Answer Selection (Judge)</h2><p>Choose one of these ghost-written answers for ${finalist.name} to defend.</p>`;
         finalAnswers.forEach((ans) => {
           html += `<button class="question-btn" data-answer="${ans.answer}">${ans.answer}</button>`;

@@ -11,7 +11,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (gameState.winner) {
           winnerNameEl.textContent = gameState.winner.name;
         } else {
-          winnerNameEl.textContent = "Niemand";
+          winnerNameEl.textContent = "Nobody";
+        }
+        // Trigger the winner celebration effect
+        if (typeof startWinnerConfetti === "function") {
+          startWinnerConfetti();
         }
       }
     });

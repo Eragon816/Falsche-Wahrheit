@@ -12,6 +12,8 @@
   </head>
   <body>
     <div id="app-container">
+      <canvas id="effects-canvas"></canvas>
+      <div class="stars"></div>
       <div class="screen">
         <!-- Schritt 1: Hauptmenü -->
         <div id="initial-choice" class="menu-step">
@@ -68,18 +70,14 @@
           .querySelectorAll(".back-btn")
           .forEach((btn) => (btn.onclick = () => showStep(initialChoice)));
 
-        // KORRIGIERTE createGame FUNKTION
         function createGame(mode) {
           const roomCode = generateRoomCode();
-          // Der Spielzustand wird jetzt in lobby.js erstellt,
-          // wir speichern den Modus temporär, damit lobby.js ihn lesen kann.
           sessionStorage.setItem("pendingGameMode", mode);
           window.location.href = `lobby.html?room=${roomCode}`;
         }
 
         document.getElementById("host-classic-btn").onclick = () =>
           createGame("classic");
-        // KORREKTUR: Hier steht jetzt 'custom'
         document.getElementById("host-custom-btn").onclick = () =>
           createGame("custom");
 
@@ -108,5 +106,6 @@
           });
       });
     </script>
+    <script src="js/effects.js" defer></script>
   </body>
 </html>
